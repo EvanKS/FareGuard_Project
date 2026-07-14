@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FareGuard - Real-time revenue leakage detection for public bus transit systems. Monitor routes, detect anomalies, and localize fare evasion.">
+  <title>FareGuard — Transit Revenue Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Data Transparency Banner -->
+  <div id="data-banner" class="data-banner">
+    <div class="banner-content">
+      <span class="banner-icon">ℹ️</span>
+      <span><strong>Data Transparency:</strong> Route structures are from real BMTC GTFS data. Ticketing/revenue figures shown are <em>simulated</em> for demonstration. <a href="#" onclick="document.getElementById('data-banner').classList.add('hidden')">Dismiss</a></span>
+    </div>
+  </div>
+
+  <!-- App Shell -->
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="32" height="32" rx="8" fill="url(#grad1)"/>
+              <path d="M8 20L12 10L16 16L20 8L24 18" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="16" cy="22" r="3" fill="rgba(255,255,255,0.4)"/>
+              <defs>
+                <linearGradient id="grad1" x1="0" y1="0" x2="32" y2="32">
+                  <stop offset="0%" stop-color="#6366f1"/>
+                  <stop offset="100%" stop-color="#8b5cf6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="logo-text">
+            <h1>FareGuard</h1>
+            <span class="logo-subtitle">Transit Revenue Intelligence</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-label">MAIN</span>
+        <a href="#" class="nav-item active" data-view="dashboard" id="nav-dashboard">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-view="routes" id="nav-routes">
+          <span class="nav-icon">🚌</span>
+          <span>Routes</span>
+        </a>
+        <a href="#" class="nav-item" data-view="anomalies" id="nav-anomalies">
+          <span class="nav-icon">⚠️</span>
+          <span>Review Queue</span>
+          <span class="nav-badge" id="anomaly-badge">0</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-label">ANALYSIS</span>
+        <a href="#" class="nav-item" data-view="localization" id="nav-localization">
+          <span class="nav-icon">🎯</span>
+          <span>Localization</span>
+        </a>
+        <a href="#" class="nav-item" data-view="timeseries" id="nav-timeseries">
+          <span class="nav-icon">📈</span>
+          <span>Time Series</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-label">SYSTEM</span>
+        <a href="#" class="nav-item" data-view="monitoring" id="nav-monitoring">
+          <span class="nav-icon">🔧</span>
+          <span>Monitoring</span>
+        </a>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="user-info" id="user-info">
+          <div class="user-avatar">TO</div>
+          <div>
+            <div class="user-name" id="user-name">Transit Official</div>
+            <div class="user-role" id="user-role">Official</div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content">
+      <!-- Dashboard View -->
+      <div class="view active" id="view-dashboard">
+        <div class="view-header">
+          <div>
+            <h2>System Overview</h2>
+            <p class="view-subtitle">Real-time revenue leakage monitoring across the transit network</p>
+          </div>
+          <div class="header-actions">
+            <span class="sim-badge">📡 Simulated Data</span>
+            <button class="btn btn-primary" onclick="refreshDashboard()">↻ Refresh</button>
+          </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid" id="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-routes">🚌</div>
+            <div class="kpi-content">
+              <span class="kpi-value" id="kpi-routes">—</span>
+              <span class="kpi-label">Active Routes</span>
+            </div>
+          </div>
+          <div class="kpi-card kpi-highlight">
+            <div class="kpi-icon kpi-leakage">💰</div>
+            <div class="kpi-content">
+              <span class="kpi-value" id="kpi-leakage">—</span>
+              <span class="kpi-label">Est. Revenue Leakage (7d)</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-anomalies">⚠️</div>
+            <div class="kpi-content">
+              <span class="kpi-value" id="kpi-anomalies">—</span>
+              <span class="kpi-label">Pending Anomalies</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-collection">📊</div>
+            <div class="kpi-content">
+              <span class="kpi-value" id="kpi-collection">—</span>
+              <span class="kpi-label">Collection Rate</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h3>Revenue Trend (Last 30 Days)</h3>
+            <div class="chart-container" id="revenue-chart"></div>
+          </div>
+          <div class="chart-card">
+            <h3>Risk Distribution</h3>
+            <div class="chart-container" id="risk-chart"></div>
+          </div>
+        </div>
+
+        <!-- Recent Anomalies Table -->
+        <div class="table-card">
+          <div class="table-header">
+            <h3>🔴 Top Flagged Anomalies</h3>
+            <button class="btn btn-ghost" onclick="switchView('anomalies')">View All →</button>
+          </div>
+          <div class="table-container" id="recent-anomalies-table"></div>
+        </div>
+      </div>
+
+      <!-- Routes View -->
+      <div class="view" id="view-routes">
+        <div class="view-header">
+          <div>
+            <h2>Route Network</h2>
+            <p class="view-subtitle">All monitored routes with leakage risk indicators</p>
+          </div>
+          <div class="header-actions">
+            <input type="text" class="search-input" id="route-search" placeholder="Search routes..." oninput="filterRoutes()">
+            <select class="filter-select" id="route-risk-filter" onchange="filterRoutes()">
+              <option value="">All Risk Levels</option>
+              <option value="critical">🔴 Critical</option>
+              <option value="high">🟠 High</option>
+              <option value="medium">🟡 Medium</option>
+              <option value="low">🟢 Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="routes-grid" id="routes-grid"></div>
+      </div>
+
+      <!-- Anomalies / Review Queue View -->
+      <div class="view" id="view-anomalies">
+        <div class="view-header">
+          <div>
+            <h2>Review Queue</h2>
+            <p class="view-subtitle">Flagged anomalies for triage by transit officials</p>
+          </div>
+          <div class="header-actions">
+            <select class="filter-select" id="anomaly-status-filter" onchange="loadAnomalies()">
+              <option value="">All Statuses</option>
+              <option value="new" selected>🔴 New</option>
+              <option value="reviewed">🟡 Reviewed</option>
+              <option value="confirmed">🟢 Confirmed</option>
+              <option value="dismissed">⚪ Dismissed</option>
+            </select>
+            <select class="filter-select" id="anomaly-sort" onchange="loadAnomalies()">
+              <option value="score">Sort by Score</option>
+              <option value="date">Sort by Date</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-container" id="anomalies-table"></div>
+      </div>
+
+      <!-- Localization View -->
+      <div class="view" id="view-localization">
+        <div class="view-header">
+          <div>
+            <h2>Segment Localization</h2>
+            <p class="view-subtitle">Graph-based flow analysis showing where in a route leakage concentrates</p>
+          </div>
+          <div class="header-actions">
+            <select class="filter-select" id="loc-route-select" onchange="loadLocalization()">
+              <option value="">Select Route</option>
+            </select>
+          </div>
+        </div>
+        <div id="localization-content">
+          <div class="empty-state">
+            <div class="empty-icon">🎯</div>
+            <h3>Select a route to view segment-level localization</h3>
+            <p>The min-cost flow algorithm identifies which stop-to-stop segments have the largest unexplained revenue discrepancy.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time Series View -->
+      <div class="view" id="view-timeseries">
+        <div class="view-header">
+          <div>
+            <h2>Revenue Time Series</h2>
+            <p class="view-subtitle">Expected vs reported revenue over time with anomaly highlighting</p>
+          </div>
+          <div class="header-actions">
+            <select class="filter-select" id="ts-route-select" onchange="loadTimeSeries()">
+              <option value="">Select Route</option>
+            </select>
+          </div>
+        </div>
+        <div id="timeseries-content">
+          <div class="empty-state">
+            <div class="empty-icon">📈</div>
+            <h3>Select a route to view time series</h3>
+            <p>Compare expected ridership and revenue against reported values over time.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monitoring View -->
+      <div class="view" id="view-monitoring">
+        <div class="view-header">
+          <div>
+            <h2>System Monitoring</h2>
+            <p class="view-subtitle">Pipeline health, model performance, and infrastructure status</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-primary" onclick="loadMonitoring()">↻ Refresh</button>
+          </div>
+        </div>
+        <div id="monitoring-content">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon">⚡</div>
+              <div class="kpi-content">
+                <span class="kpi-value" id="mon-pipeline-status">—</span>
+                <span class="kpi-label">Pipeline Status</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon">📥</div>
+              <div class="kpi-content">
+                <span class="kpi-value" id="mon-events-ingested">—</span>
+                <span class="kpi-label">Events Ingested</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon">💀</div>
+              <div class="kpi-content">
+                <span class="kpi-value" id="mon-dead-letters">—</span>
+                <span class="kpi-label">Dead Letter Events</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon">🧠</div>
+              <div class="kpi-content">
+                <span class="kpi-value" id="mon-active-models">—</span>
+                <span class="kpi-label">Active Models</span>
+              </div>
+            </div>
+          </div>
+          <div class="table-card" style="margin-top: 1.5rem;">
+            <h3>Active ML Models</h3>
+            <div class="table-container" id="models-table"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Anomaly Detail Modal -->
+  <div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="modal-title">Anomaly Details</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer" id="modal-footer"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
