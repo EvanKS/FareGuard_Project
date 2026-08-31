@@ -1,0 +1,26 @@
+{
+  "total_trips_assessed": 200,
+  "risk_level_distribution": {
+    "NORMAL": 89,
+    "MONITOR": 84,
+    "SUSPICIOUS": 19,
+    "HIGH_RISK": 8
+  },
+  "total_estimated_revenue_impact_inr": 40599.16,
+  "mean_risk_score": 0.3903,
+  "max_risk_score": 0.9767,
+  "min_risk_score": 0.2394,
+  "weights": {
+    "w_anomaly_score": 0.25,
+    "w_revenue_discrepancy": 0.25,
+    "w_passenger_discrepancy": 0.2,
+    "w_localization_confidence": 0.15,
+    "w_pattern_frequency": 0.15
+  },
+  "thresholds": {
+    "normal_max": 0.3,
+    "monitor_max": 0.6,
+    "suspicious_max": 0.8
+  },
+  "version": "1.0.0"
+}

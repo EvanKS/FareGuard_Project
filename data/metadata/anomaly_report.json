@@ -1,0 +1,90 @@
+{
+  "generated_at": "2026-08-29T04:33:41.966404+00:00",
+  "random_seed": 42,
+  "clean_baseline_preserved": true,
+  "total_trips": 200,
+  "total_anomalies_injected": 30,
+  "total_estimated_leakage_inr": 8476.5,
+  "total_passenger_gap": 406,
+  "severity_breakdown": {
+    "MEDIUM": 12,
+    "CRITICAL": 10,
+    "HIGH": 4,
+    "LOW": 4
+  },
+  "type_breakdown": {
+    "TICKET_UNDERREPORTING": {
+      "count": 5,
+      "total_revenue_gap_inr": 596.0,
+      "total_passenger_gap": 43,
+      "mean_leakage_pct": 16.8,
+      "median_leakage_pct": 12.95,
+      "min_leakage_pct": 7.01,
+      "max_leakage_pct": 25.67
+    },
+    "REVENUE_UNDERREPORTING": {
+      "count": 5,
+      "total_revenue_gap_inr": 743.5,
+      "total_passenger_gap": 0,
+      "mean_leakage_pct": 17.59,
+      "median_leakage_pct": 17.88,
+      "min_leakage_pct": 6.86,
+      "max_leakage_pct": 27.34
+    },
+    "MISSING_TRIP": {
+      "count": 5,
+      "total_revenue_gap_inr": 3506.0,
+      "total_passenger_gap": 278,
+      "mean_leakage_pct": 100.0,
+      "median_leakage_pct": 100.0,
+      "min_leakage_pct": 100.0,
+      "max_leakage_pct": 100.0
+    },
+    "FARE_MISMATCH": {
+      "count": 5,
+      "total_revenue_gap_inr": 2284.0,
+      "total_passenger_gap": 0,
+      "mean_leakage_pct": 63.44,
+      "median_leakage_pct": 63.8,
+      "min_leakage_pct": 60.67,
+      "max_leakage_pct": 65.52
+    },
+    "SEGMENT_SPECIFIC_LEAKAGE": {
+      "count": 5,
+      "total_revenue_gap_inr": 693.0,
+      "total_passenger_gap": 43,
+      "mean_leakage_pct": 14.88,
+      "median_leakage_pct": 15.19,
+      "min_leakage_pct": 8.66,
+      "max_leakage_pct": 18.93
+    },
+    "REPEATED_ANOMALY": {
+      "count": 5,
+      "total_revenue_gap_inr": 654.0,
+      "total_passenger_gap": 42,
+      "mean_leakage_pct": 16.61,
+      "median_leakage_pct": 18.12,
+      "min_leakage_pct": 13.27,
+      "max_leakage_pct": 19.61
+    }
+  },
+  "verification_summary": {
+    "is_valid": true,
+    "errors": 0,
+    "issues": [
+      {
+        "check_name": "ground_truth_reconstruction",
+        "severity": "INFO",
+        "message": "100% of 30 injected anomalies independently reconstructed and verified",
+        "affected_trips": 0
+      },
+      {
+        "check_name": "untouched_trips_preservation",
+        "severity": "INFO",
+        "message": "All 170 non-anomalous trips preserved 100% untouched",
+        "affected_trips": 0
+      }
+    ]
+  },
+  "status": "success"
+}

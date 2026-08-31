@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-08-29 03:19:37Z",
+  "statistics": {
+    "num_nodes": 9887,
+    "num_edges": 1462265,
+    "num_unique_stop_pairs": 17544,
+    "num_routes": 4358,
+    "num_trips": 56735,
+    "num_connected_components": 41,
+    "largest_component_nodes": 9780,
+    "avg_in_degree": 147.9,
+    "avg_out_degree": 147.9,
+    "avg_stops_per_trip": 26.8,
+    "avg_segment_distance_km": 0.724
+  },
+  "artifact_path": "C:\\Users\\Evan KS\\OneDrive\\Scans\\Desktop\\fareguard\\models\\transit_graph.pkl",
+  "edges_csv_path": "C:\\Users\\Evan KS\\OneDrive\\Scans\\Desktop\\fareguard\\data\\processed\\graph_edges.csv",
+  "status": "success"
+}

@@ -1,0 +1,20 @@
+{
+  "total_true_anomalies": 30,
+  "detected_true_anomalies": 20,
+  "missed_true_anomalies_fn": 10,
+  "phase7_false_positives_fp": 45,
+  "total_localized_paths": 65,
+  "exact_matches": 11,
+  "partial_overlaps_only": 8,
+  "total_with_overlap": 19,
+  "incorrect_or_unlocalized": 11,
+  "end_to_end_exact_recall": 0.3667,
+  "end_to_end_overlap_recall": 0.6333,
+  "conditional_exact_accuracy": 0.55,
+  "conditional_overlap_accuracy": 0.95,
+  "path_precision": 0.5101,
+  "path_recall": 0.5024,
+  "path_f1": 0.5062,
+  "exact_accuracy": 0.3667,
+  "partial_path_overlaps": 19
+}

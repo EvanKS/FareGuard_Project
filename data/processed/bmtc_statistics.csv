@@ -1,0 +1,2 @@
+fleet_size,operating_fleet,daily_ridership_estimate,daily_trips_estimate,total_routes_estimate,avg_daily_revenue_crore,annual_traffic_revenue_crore,fleet_utilization_pct,avg_fare_inr,peak_hour_multiplier,off_peak_multiplier,weekend_multiplier,upi_payment_share_pct,cash_payment_share_pct,pass_payment_share_pct,fiscal_year,operating_loss_crore,non_traffic_revenue_crore,source_type,synthetic_flag
+6569,6147,3843000,56855,4381,4.63,1691.07,82.3,15.0,1.8,0.6,0.7,25.0,65.0,10.0,2023-24,575.45,811.0,compiled_from_public_government_sources,False

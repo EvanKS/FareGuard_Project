@@ -1,0 +1,18 @@
+{
+  "model_name": "IsolationForest",
+  "contamination": 0.15,
+  "random_state": 42,
+  "feature_names": [
+    "expected_passengers",
+    "reported_passengers",
+    "passenger_diff",
+    "passenger_ratio",
+    "expected_revenue_inr",
+    "reported_revenue_inr",
+    "revenue_diff_inr",
+    "revenue_ratio",
+    "revenue_per_pax_diff",
+    "is_zero_reported"
+  ],
+  "saved_at": "2026-08-29T05:10:18.565269+00:00"
+}

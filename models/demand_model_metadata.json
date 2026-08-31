@@ -1,0 +1,27 @@
+{
+  "model_type": "baseline",
+  "feature_names": [
+    "num_stops",
+    "departure_hour",
+    "departure_minute",
+    "departure_seconds",
+    "is_morning_peak",
+    "is_evening_peak",
+    "is_midday",
+    "is_night",
+    "day_of_week",
+    "is_weekend",
+    "route_length_km",
+    "avg_segment_dist_km",
+    "route_frequency",
+    "expected_stop_load"
+  ],
+  "random_seed": 42,
+  "metrics": {
+    "mae": 26.06,
+    "rmse": 30.283,
+    "mape": 38.31,
+    "r2": 0.5769
+  },
+  "saved_at": "2026-08-29T04:54:47.834972+00:00"
+}

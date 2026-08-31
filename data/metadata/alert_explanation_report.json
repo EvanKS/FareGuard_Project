@@ -1,0 +1,20 @@
+{
+  "total_alerts_generated": 200,
+  "dominant_explanation_types": {
+    "NOMINAL": 89,
+    "SEGMENT_ANOMALY": 45,
+    "COMPOSITE_ANOMALY": 33,
+    "PASSENGER_UNDERREPORTING": 19,
+    "REVENUE_DISCREPANCY": 9,
+    "MISSING_TRIP": 5
+  },
+  "risk_level_distribution": {
+    "NORMAL": 89,
+    "MONITOR": 84,
+    "SUSPICIOUS": 19,
+    "HIGH_RISK": 8
+  },
+  "mean_confidence": 0.9755,
+  "total_revenue_impact_explained_inr": 40599.16,
+  "version": "1.0.0"
+}

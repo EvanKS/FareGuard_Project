@@ -1,0 +1,112 @@
+{
+  "generated_at": "2026-08-29T03:35:55.033548+00:00",
+  "random_seed": 42,
+  "days_simulated": 1,
+  "start_date": "2026-08-29",
+  "is_demo_subset": true,
+  "calibration_basis": {
+    "source": "Economic Survey of Karnataka 2024-25 & BMTC Reports",
+    "target_daily_ridership": 3843000,
+    "target_avg_fare_inr": 15.0,
+    "synthetic_flag_semantics": "All generated records have synthetic_flag=True",
+    "anomaly_free_baseline": true
+  },
+  "simulation_results": {
+    "total_trips": 200,
+    "total_passengers": 15131,
+    "total_tickets": 14772,
+    "total_revenue_inr": 182077.0,
+    "avg_passengers_per_trip": 75.66,
+    "avg_fare_per_passenger_inr": 12.03,
+    "payment_mode_distribution": {
+      "cash": 0.644,
+      "upi": 0.255,
+      "pass_card": 0.102
+    }
+  },
+  "validation_summary": {
+    "is_valid": true,
+    "errors": 0,
+    "warnings": 0,
+    "issues": [
+      {
+        "check_name": "synthetic_flag_check",
+        "table": "tickets",
+        "severity": "INFO",
+        "message": "All ticket records explicitly marked synthetic_flag=True",
+        "affected_rows": 0
+      },
+      {
+        "check_name": "passenger_count_positive",
+        "table": "tickets",
+        "severity": "INFO",
+        "message": "All tickets have passenger_count >= 1",
+        "affected_rows": 0
+      },
+      {
+        "check_name": "forward_travel_constraint",
+        "table": "tickets",
+        "severity": "INFO",
+        "message": "All tickets respect strictly forward route progression (dest_seq > orig_seq)",
+        "affected_rows": 0
+      },
+      {
+        "check_name": "distinct_od_stops",
+        "table": "tickets",
+        "severity": "INFO",
+        "message": "All tickets have distinct origin and destination stops",
+        "affected_rows": 0
+      },
+      {
+        "check_name": "non_negative_amount",
+        "table": "tickets",
+        "severity": "INFO",
+        "message": "All ticket amounts are non-negative",
+        "affected_rows": 0
+      },
+      {
+        "check_name": "valid_payment_mode",
+        "table": "tickets",
+        "severity": "INFO",
+        "message": "All payment modes valid (cash, upi, pass_card)",
+        "affected_rows": 0
+      },
+      {
+        "check_name": "total_passengers_non_negative",
+        "table": "trip_summaries",
+        "severity": "INFO",
+        "message": "All trips have non-negative total_passengers",
+        "affected_rows": 0
+      },
+      {
+        "check_name": "total_revenue_inr_non_negative",
+        "table": "trip_summaries",
+        "severity": "INFO",
+        "message": "All trips have non-negative total_revenue_inr",
+        "affected_rows": 0
+      },
+      {
+        "check_name": "ticket_count_non_negative",
+        "table": "trip_summaries",
+        "severity": "INFO",
+        "message": "All trips have non-negative ticket_count",
+        "affected_rows": 0
+      },
+      {
+        "check_name": "passenger_load_non_negative",
+        "table": "segment_flows",
+        "severity": "INFO",
+        "message": "All segment passenger loads are non-negative",
+        "affected_rows": 0
+      },
+      {
+        "check_name": "segment_revenue_non_negative",
+        "table": "segment_flows",
+        "severity": "INFO",
+        "message": "All segment revenues are non-negative",
+        "affected_rows": 0
+      }
+    ]
+  },
+  "status": "success"
+}

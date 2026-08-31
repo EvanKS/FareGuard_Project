@@ -1,0 +1,19 @@
+{
+  "true_leakage_phase5_inr": 8476.5,
+  "estimated_discrepancy_phase9_inr": 40599.159999999996,
+  "difference_inr": 32122.659999999996,
+  "relative_error_pct": 378.96136377042404,
+  "injected_trips_discrepancy_inr": 14688.05,
+  "normal_trips_discrepancy_inr": 25911.11,
+  "risk_monotonicity": true,
+  "explanation_faithfulness": true,
+  "duplicate_handling_pass": true,
+  "dlq_handling_pass": true,
+  "throughput_eps": 125.81925636069344,
+  "latency_metrics_ms": {
+    "avg_latency_ms": 7.92,
+    "p95_latency_ms": 10.98,
+    "min_latency_ms": 6.48,
+    "max_latency_ms": 20.29
+  }
+}

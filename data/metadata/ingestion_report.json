@@ -1,0 +1,196 @@
+{
+  "execution_timestamp": "2026-08-28T17:13:42.459816+00:00",
+  "data_source": {
+    "source": "BMTC GTFS"
+  },
+  "files_processed": [
+    "routes.txt",
+    "stops.txt",
+    "trips.txt",
+    "stop_times.txt",
+    "shapes.txt",
+    "calendar.txt",
+    "fare_attributes.txt",
+    "fare_rules.txt",
+    "agency.txt"
+  ],
+  "record_counts": {
+    "routes": 4381,
+    "stops": 9887,
+    "trips": 56855,
+    "stop_times": 1519120,
+    "shapes": 2447719,
+    "calendar": 1,
+    "calendar_dates": 0,
+    "fare_attributes": 120,
+    "fare_rules": 261613,
+    "agency": 1
+  },
+  "output_paths": [
+    "C:\\Users\\Evan KS\\OneDrive\\Scans\\Desktop\\fareguard\\data\\processed\\routes.csv",
+    "C:\\Users\\Evan KS\\OneDrive\\Scans\\Desktop\\fareguard\\data\\processed\\stops.csv",
+    "C:\\Users\\Evan KS\\OneDrive\\Scans\\Desktop\\fareguard\\data\\processed\\trips.csv",
+    "C:\\Users\\Evan KS\\OneDrive\\Scans\\Desktop\\fareguard\\data\\processed\\stop_times.csv",
+    "C:\\Users\\Evan KS\\OneDrive\\Scans\\Desktop\\fareguard\\data\\processed\\shapes.csv",
+    "C:\\Users\\Evan KS\\OneDrive\\Scans\\Desktop\\fareguard\\data\\processed\\calendar.csv",
+    "C:\\Users\\Evan KS\\OneDrive\\Scans\\Desktop\\fareguard\\data\\processed\\fare_attributes.csv",
+    "C:\\Users\\Evan KS\\OneDrive\\Scans\\Desktop\\fareguard\\data\\processed\\fare_rules.csv",
+    "C:\\Users\\Evan KS\\OneDrive\\Scans\\Desktop\\fareguard\\data\\processed\\agency.csv"
+  ],
+  "validation": {
+    "valid": true,
+    "tables_checked": [
+      "routes",
+      "stops",
+      "trips",
+      "stop_times",
+      "shapes",
+      "calendar",
+      "fare_attributes",
+      "fare_rules",
+      "agency"
+    ],
+    "record_counts": {
+      "routes": 4381,
+      "stops": 9887,
+      "trips": 56855,
+      "stop_times": 1519120,
+      "shapes": 2447719,
+      "calendar": 1,
+      "fare_attributes": 120,
+      "fare_rules": 261613,
+      "agency": 1
+    },
+    "errors": 0,
+    "warnings": 0,
+    "info": 13,
+    "issues": [
+      {
+        "severity": "INFO",
+        "table": "routes",
+        "check": "required_columns",
+        "message": "All required columns present (1 columns)",
+        "count": 0
+      },
+      {
+        "severity": "INFO",
+        "table": "routes",
+        "check": "unique_ids",
+        "message": "Column 'route_id' has all unique values (4,381)",
+        "count": 0
+      },
+      {
+        "severity": "INFO",
+        "table": "stops",
+        "check": "required_columns",
+        "message": "All required columns present (1 columns)",
+        "count": 0
+      },
+      {
+        "severity": "INFO",
+        "table": "stops",
+        "check": "unique_ids",
+        "message": "Column 'stop_id' has all unique values (9,887)",
+        "count": 0
+      },
+      {
+        "severity": "INFO",
+        "table": "stops",
+        "check": "coordinates",
+        "message": "All stop coordinates within valid range",
+        "count": 0
+      },
+      {
+        "severity": "INFO",
+        "table": "trips",
+        "check": "required_columns",
+        "message": "All required columns present (3 columns)",
+        "count": 0
+      },
+      {
+        "severity": "INFO",
+        "table": "trips",
+        "check": "unique_ids",
+        "message": "Column 'trip_id' has all unique values (56,855)",
+        "count": 0
+      },
+      {
+        "severity": "INFO",
+        "table": "trips",
+        "check": "referential_integrity",
+        "message": "All trip route_ids exist in routes table",
+        "count": 0
+      },
+      {
+        "severity": "INFO",
+        "table": "stop_times",
+        "check": "required_columns",
+        "message": "All required columns present (5 columns)",
+        "count": 0
+      },
+      {
+        "severity": "INFO",
+        "table": "stop_times",
+        "check": "referential_integrity_trips",
+        "message": "All stop_times trip_ids exist in trips table",
+        "count": 0
+      },
+      {
+        "severity": "INFO",
+        "table": "stop_times",
+        "check": "referential_integrity_stops",
+        "message": "All stop_times stop_ids exist in stops table",
+        "count": 0
+      },
+      {
+        "severity": "INFO",
+        "table": "stop_times",
+        "check": "time_format",
+        "message": "Time format appears valid (HH:MM:SS)",
+        "count": 0
+      },
+      {
+        "severity": "INFO",
+        "table": "shapes",
+        "check": "required_columns",
+        "message": "All required columns present (4 columns)",
+        "count": 0
+      }
+    ]
+  },
+  "transformations": [
+    {
+      "table": "routes",
+      "action": "normalize_route_type",
+      "description": "Converted route_type to integer",
+      "affected_rows": 0,
+      "affected_columns": [
+        "route_type"
+      ]
+    },
+    {
+      "table": "trips",
+      "action": "normalize_direction",
+      "description": "Converted direction_id to integer",
+      "affected_rows": 0,
+      "affected_columns": [
+        "direction_id"
+      ]
+    },
+    {
+      "table": "stop_times",
+      "action": "sort",
+      "description": "Sorted by trip_id, stop_sequence",
+      "affected_rows": 0,
+      "affected_columns": []
+    },
+    {
+      "table": "shapes",
+      "action": "sort",
+      "description": "Sorted by shape_id, shape_pt_sequence",
+      "affected_rows": 0,
+      "affected_columns": []
+    }
+  ],
+  "status": "success"
+}

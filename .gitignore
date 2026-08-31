@@ -1,0 +1,65 @@
+# Python & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# IDE & Editor Configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment & Secrets (Keep .env.example tracked)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Testing & Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# OS Artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary / Scratch Files
+scratch/
+*.log
+
+# Large Datasets & Binary Artifacts (> 50MB / > 100MB)
+# (Easily generated/downloaded using scripts/download_data.py and scripts/build_graph.py)
+models/transit_graph.pkl
+data/processed/graph_edges.csv
+data/processed/shapes.csv
+data/raw/gtfs/shapes.txt
+data/processed/stop_times.csv
+data/raw/gtfs/stop_times.txt
+data/raw/gtfs/bmtc.zip
+data/fareguard.db
+
+# Directory structure preservation
+!data/raw/gtfs/.gitkeep
+!data/raw/bmtc_statistics/.gitkeep
+!data/processed/.gitkeep
+!data/synthetic/.gitkeep
+!data/metadata/.gitkeep
+!models/.gitkeep
+!notebooks/.gitkeep
+!dashboard/pages/.gitkeep
+!dashboard/components/.gitkeep

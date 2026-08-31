@@ -1,0 +1,180 @@
+{
+  "project": "FareGuard",
+  "generated_at": "2026-08-28T17:41:05.989342+00:00",
+  "data_integrity_note": "Real/public data is distinguished from synthetic data throughout the project. GTFS route/stop/trip data is sourced from public repositories. Individual ticket transactions are synthetically generated in later phases.",
+  "sources": [
+    {
+      "id": "bmtc_gtfs",
+      "name": "Vonter/bmtc-gtfs",
+      "url": "https://github.com/Vonter/bmtc-gtfs/raw/main/gtfs/bmtc.zip",
+      "dataset_name": "BMTC GTFS (Routes, Stops, Trips, Timetables)",
+      "access_date": "2026-08-28",
+      "download_timestamp": "2026-08-28T17:13:04.908601+00:00",
+      "publisher": "Vonter (GitHub community contributor)",
+      "official": false,
+      "source_type": "third_party_derived",
+      "source_repository": "https://github.com/Vonter/bmtc-gtfs",
+      "license": "Open source (GitHub public repository)",
+      "caveat": "Data sourced from Namma BMTC app which may not be completely accurate, particularly for timetables and stop timings. Only routes with functional live tracking are included.",
+      "purpose_in_fareguard": "Transit network structure (routes, stops, trips, stop_times, shapes)",
+      "local_path": "data/raw/gtfs",
+      "file_name": "bmtc.zip",
+      "file_size_bytes": 44097261,
+      "sha256": "2308f8248ea954b75b3660cda7b6d85ecf80831179968baec8ae3db5b41b0b4e",
+      "verification_status": "verified",
+      "download_result": {
+        "source": "Vonter/bmtc-gtfs",
+        "url": "https://github.com/Vonter/bmtc-gtfs/raw/main/gtfs/bmtc.zip",
+        "status": "skipped_existing_verified",
+        "timestamp": "2026-08-28T17:41:05.988779+00:00",
+        "file_name": "bmtc.zip",
+        "file_size_bytes": 44097261,
+        "sha256": "2308f8248ea954b75b3660cda7b6d85ecf80831179968baec8ae3db5b41b0b4e",
+        "verification_status": "verified",
+        "files": [
+          "routes.txt",
+          "stops.txt",
+          "trips.txt",
+          "stop_times.txt"
+        ]
+      },
+      "fields_used": [
+        "route_id",
+        "route_short_name",
+        "route_long_name",
+        "route_type",
+        "stop_id",
+        "stop_name",
+        "stop_lat",
+        "stop_lon",
+        "trip_id",
+        "service_id",
+        "direction_id",
+        "arrival_time",
+        "departure_time",
+        "stop_sequence",
+        "shape_id",
+        "shape_pt_lat",
+        "shape_pt_lon",
+        "shape_pt_sequence"
+      ]
+    },
+    {
+      "id": "bmtc_statistics",
+      "name": "BMTC Aggregate Operational Statistics",
+      "dataset_name": "BMTC Aggregate Operational Statistics",
+      "primary_sources": [
+        {
+          "document": "Economic Survey of Karnataka 2024-25 / 2023-24",
+          "publisher": "Planning, Programme Monitoring and Statistics Department, Government of Karnataka",
+          "period": "FY 2023-24 (Full Year & Period up to Nov 2023)",
+          "metrics_extracted": [
+            "daily_ridership",
+            "operating_fleet",
+            "fleet_utilization",
+            "daily_schedules"
+          ]
+        },
+        {
+          "document": "BMTC Audited Financial Statements & Annual Report FY 2023-24",
+          "publisher": "Bengaluru Metropolitan Transport Corporation (BMTC), Government of Karnataka",
+          "period": "FY 2023-24 (April 1, 2023 - March 31, 2024)",
+          "metrics_extracted": [
+            "operating_loss",
+            "traffic_revenue",
+            "non_traffic_revenue"
+          ]
+        }
+      ],
+      "provenance_breakdown": {
+        "daily_ridership": {
+          "value": 3843000,
+          "display": "38.43 Lakh / Day",
+          "classification": "DIRECT SOURCE VALUE",
+          "source_document": "Economic Survey of Karnataka 2024-25 (Transport & Communications Chapter)",
+          "notes": "Full year FY 2023-24 average post-Shakti Scheme surge. Interim period up to Nov 2023 recorded 36.27 Lakh/day."
+        },
+        "operating_fleet": {
+          "value": 6147,
+          "classification": "DIRECT SOURCE VALUE",
+          "source_document": "Economic Survey of Karnataka 2023-24 (Table: BMTC Operational Statistics)",
+          "notes": "Vehicles operated on scheduled routes. Total fleet including maintenance/depot reserve is 6,569."
+        },
+        "total_fleet_with_reserves": {
+          "value": 6569,
+          "classification": "DIRECT SOURCE VALUE",
+          "source_document": "BMTC Annual Performance Bulletin FY 2023-24",
+          "notes": "Total held fleet across 45 depots."
+        },
+        "fleet_utilization_pct": {
+          "value": 82.3,
+          "classification": "DIRECT SOURCE VALUE",
+          "source_document": "Economic Survey of Karnataka 2023-24 (Section: Urban Transport Performance)",
+          "notes": "Average operational fleet utilization percentage."
+        },
+        "operating_loss_crore": {
+          "value": 575.45,
+          "classification": "DIRECT SOURCE VALUE",
+          "source_document": "BMTC Audited Annual Financial Report FY 2023-24",
+          "notes": "Operating loss of Rs 575.45 Crore (42.3% reduction from Rs 997.38 Crore in FY 2022-23)."
+        },
+        "non_traffic_revenue_crore": {
+          "value": 811.0,
+          "classification": "DIRECT SOURCE VALUE",
+          "source_document": "BMTC Annual Report FY 2023-24 (Commercial & Non-Fare Revenue Section)",
+          "notes": "Generated from land leasing, commercial complexes (TTMC), stalls, and advertisements."
+        },
+        "annual_traffic_revenue_crore": {
+          "value": 1691.07,
+          "classification": "DIRECT SOURCE VALUE",
+          "source_document": "BMTC Performance Review FY 2023-24 (Traffic Revenue Account)",
+          "notes": "Total traffic revenue Rs 1,691.07 Crore (+24.1% year-on-year increase)."
+        },
+        "avg_daily_traffic_revenue_crore": {
+          "value": 4.63,
+          "classification": "CALCULATED VALUE",
+          "calculation": "Annual Traffic Revenue (Rs 1,691.07 Crore) / 365 Days = Rs 4.633 Crore / Day",
+          "source_document": "Calculated from BMTC FY 2023-24 Traffic Revenue"
+        },
+        "avg_fare_inr": {
+          "value": 15.0,
+          "classification": "DERIVED VALUE",
+          "derivation": "Weighted average of ordinary non-AC bus stage fares (Stage 1 @ Rs 5 to Stage 14 @ Rs 30; commuter trip volume concentrated in Stages 3-6 @ Rs 15-20).",
+          "source_document": "BMTC Public Fare Stage Structure Notification"
+        }
+      },
+      "access_date": "2026-08-28",
+      "official": false,
+      "source_type": "Compiled from verified public government documents",
+      "caveat": "These aggregate figures are derived from official public government publications for FY 2023-24. They provide high-level calibration anchors for the synthetic data generator and do not represent individual electronic ticketing machine (ETM) transaction logs.",
+      "purpose_in_fareguard": "Statistical calibration of synthetic demand and revenue simulation layers",
+      "local_path": "data/raw/bmtc_statistics",
+      "download_result": {
+        "source": "BMTC Aggregate Operational Statistics",
+        "status": "success",
+        "timestamp": "2026-08-28T17:41:05.987977+00:00",
+        "file": "C:\\Users\\Evan KS\\OneDrive\\Scans\\Desktop\\fareguard\\data\\raw\\bmtc_statistics\\bmtc_aggregate_statistics.json",
+        "fields": [
+          "fleet_size",
+          "operating_fleet",
+          "daily_ridership_estimate",
+          "daily_trips_estimate",
+          "total_routes_estimate",
+          "avg_daily_revenue_crore",
+          "annual_traffic_revenue_crore",
+          "fleet_utilization_pct",
+          "avg_fare_inr",
+          "peak_hour_multiplier",
+          "off_peak_multiplier",
+          "weekend_multiplier",
+          "upi_payment_share_pct",
+          "cash_payment_share_pct",
+          "pass_payment_share_pct",
+          "fiscal_year",
+          "operating_loss_crore",
+          "non_traffic_revenue_crore"
+        ]
+      }
+    }
+  ]
+}
