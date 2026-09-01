@@ -1,0 +1,141 @@
+{
+  "evaluation_timestamp": "2026-09-01T09:11:02.515269+00:00",
+  "fareguard_version": "1.0.0",
+  "gtfs_sha256": "2308f8248ea954b75b3660cda7b6d85ecf80831179968baec8ae3db5b41b0b4e",
+  "random_seed": 42,
+  "experiment_a_demand_prediction": {
+    "dataset_size": 200,
+    "train_size": 140,
+    "val_size": 30,
+    "test_size": 30,
+    "models": {
+      "HistoricalMeanBaseline": {
+        "mae": 26.06,
+        "rmse": 30.283,
+        "mape": 38.31,
+        "r2": 0.5769
+      },
+      "RandomForestRegressor": {
+        "mae": 26.475,
+        "rmse": 31.93,
+        "mape": 36.845,
+        "r2": 0.5296
+      },
+      "GradientBoostingRegressor": {
+        "mae": 31.802,
+        "rmse": 36.617,
+        "mape": 40.517,
+        "r2": 0.3814
+      }
+    },
+    "selected_primary_model": "RandomForestRegressor",
+    "primary_test_metrics": {
+      "mae": 26.475,
+      "rmse": 31.93,
+      "mape": 36.845,
+      "r2": 0.5296
+    }
+  },
+  "experiment_b_anomaly_detection": {
+    "evaluation_protocol": "Inductive Clean-Reference Isolation Forest (Fit on Clean Baseline, Predict on Injected Dataset)",
+    "total_evaluated_trips": 200,
+    "true_anomaly_count": 30,
+    "primary_model_results": {
+      "model_name": "Inductive Clean-Reference Isolation Forest",
+      "tp": 21,
+      "fp": 25,
+      "fn": 9,
+      "tn": 145,
+      "predicted_positives": 46,
+      "precision": 0.4565,
+      "recall": 0.7,
+      "f1_score": 0.5526,
+      "pr_auc": 0.6264,
+      "roc_auc": 0.8778,
+      "fpr": 0.1471
+    },
+    "baseline_model_results": {
+      "model_name": "Rule-Based Discrepancy Threshold",
+      "tp": 15,
+      "fp": 7,
+      "fn": 15,
+      "tn": 163,
+      "predicted_positives": 22,
+      "precision": 0.6818,
+      "recall": 0.5,
+      "f1_score": 0.5769
+    }
+  },
+  "experiment_c_localization": {
+    "total_true_anomalies": 30,
+    "detected_true_anomalies": 20,
+    "missed_true_anomalies_fn": 10,
+    "phase7_false_positives_fp": 45,
+    "total_localized_paths": 65,
+    "exact_matches": 11,
+    "partial_overlaps_only": 8,
+    "total_with_overlap": 19,
+    "incorrect_or_unlocalized": 11,
+    "end_to_end_exact_recall": 0.3667,
+    "end_to_end_overlap_recall": 0.6333,
+    "conditional_exact_accuracy": 0.55,
+    "conditional_overlap_accuracy": 0.95,
+    "path_precision": 0.5101,
+    "path_recall": 0.5024,
+    "path_f1": 0.5062,
+    "exact_accuracy": 0.3667,
+    "partial_path_overlaps": 19
+  },
+  "experiment_d_financial_estimation": {
+    "true_injected_revenue_leakage_inr": 8476.5,
+    "observable_estimated_discrepancy_inr": 40599.16,
+    "absolute_difference_inr": 32122.66,
+    "relative_gap_ratio": 3.79,
+    "reconciliation_explanation": "True injected leakage (\u20b98,476.50) is the ground-truth money directly subtracted by anomaly injectors. Observable estimated discrepancy (\u20b940,599.16) is the total aggregate expected-vs-reported fare gap across all flagged trips, calculated objectively without privileged ground-truth knowledge."
+  },
+  "experiment_e_real_time_streaming": {
+    "events_submitted": 200,
+    "events_processed": 200,
+    "events_failed": 0,
+    "duplicates_detected": 0,
+    "benchmark_duration_seconds": 2.724,
+    "throughput_events_per_sec": 73.41,
+    "average_latency_ms": 13.59,
+    "p95_latency_ms": 25.57,
+    "environment": "Local Dev / Single Process"
+  },
+  "ground_truth_isolation_audit": {
+    "feature_columns_checked": [
+      "num_stops",
+      "departure_hour",
+      "departure_minute",
+      "departure_seconds",
+      "is_morning_peak",
+      "is_evening_peak",
+      "is_midday",
+      "is_night",
+      "day_of_week",
+      "is_weekend",
+      "route_length_km",
+      "avg_segment_dist_km",
+      "route_frequency",
+      "expected_stop_load"
+    ],
+    "forbidden_columns": [
+      "ground_truth",
+      "end_sequence",
+      "revenue_gap",
+      "anomaly_type",
+      "leakage_percentage",
+      "start_sequence",
+      "injection_parameters",
+      "true_leakage",
+      "true_affected_segment",
+      "severity",
+      "passenger_gap"
+    ],
+    "leaked_columns_found": [],
+    "isolation_verified": true
+  },
+  "evaluation_status": "SUCCESS_ALL_EXPERIMENTS_VERIFIED"
+}

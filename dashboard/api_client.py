@@ -275,6 +275,32 @@ class FareGuardAPIClient:
         except Exception:
             return None
 
+    def get_alert_audit_log(self, alert_id: str) -> List[Dict[str, Any]]:
+        res = self._get(f"/investigations/alerts/{alert_id}/audit-log")
+        if res is not None and isinstance(res, list):
+            return res
+        try:
+            db = self._get_db_session()
+            try:
+                repo = FareGuardRepository(db)
+                audits = repo.list_audit_logs(entity_type="ALERT", entity_id=alert_id, limit=100)
+                return [
+                    {
+                        "audit_id": a.audit_id,
+                        "entity_type": a.entity_type,
+                        "entity_id": a.entity_id,
+                        "action": a.action,
+                        "actor": a.actor,
+                        "details": a.details,
+                        "timestamp": a.timestamp.isoformat() if a.timestamp else None,
+                    }
+                    for a in audits
+                ]
+            finally:
+                db.close()
+        except Exception:
+            return []
+
     # -------------------------------------------------------------
     # Live Streaming & Events
     # -------------------------------------------------------------

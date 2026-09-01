@@ -303,26 +303,18 @@ class FareGuardRepository:
             q = q.filter(InvestigationModel.alert_id == str(alert_id))
         return q.order_by(desc(InvestigationModel.created_at)).limit(limit).all()
 
-    def create_audit_log(
+    def list_audit_logs(
         self,
-        entity_type: str,
-        entity_id: str,
-        action: str,
-        actor: str = "system",
-        details: Optional[Dict[str, Any]] = None,
-    ) -> AuditLogModel:
-        audit = AuditLogModel(
-            audit_id=f"AUD-{uuid.uuid4().hex[:12].upper()}",
-            entity_type=entity_type,
-            entity_id=entity_id,
-            action=action,
-            actor=actor,
-            details=details,
-        )
-        self.db.add(audit)
-        self.db.commit()
-        self.db.refresh(audit)
-        return audit
+        entity_type: Optional[str] = None,
+        entity_id: Optional[str] = None,
+        limit: int = 50,
+    ) -> List[AuditLogModel]:
+        q = self.db.query(AuditLogModel)
+        if entity_type:
+            q = q.filter(AuditLogModel.entity_type == str(entity_type).upper())
+        if entity_id:
+            q = q.filter(AuditLogModel.entity_id == str(entity_id))
+        return q.order_by(desc(AuditLogModel.timestamp)).limit(limit).all()
 
     # -------------------------------------------------------------
     # Processing Results

@@ -146,3 +146,28 @@ with col_action:
             st.rerun()
         else:
             st.error("Failed to submit investigation action. Please verify backend connection.")
+
+st.markdown("---")
+st.subheader("Immutable Audit Log & Action History")
+audit_logs = client.get_alert_audit_log(alert_id)
+if audit_logs:
+    for entry in audit_logs:
+        actor = entry.get("actor", "auditor")
+        action = entry.get("action", "ACTION")
+        ts = entry.get("timestamp", "N/A")
+        det = entry.get("details", {}) or {}
+        cmt = det.get("comment", "") or "No comment provided."
+        st.markdown(
+            f"""
+            <div style="background: rgba(30, 41, 59, 0.5); padding: 0.75rem 1rem; border-left: 4px solid #38bdf8; border-radius: 4px; margin-bottom: 0.5rem;">
+                <span style="color: #94a3b8; font-size: 0.85rem;">{ts}</span> &nbsp;|&nbsp; 
+                <strong style="color: #f8fafc;">{actor}</strong> executed 
+                <code style="color: #38bdf8;">{action}</code>
+                <p style="color: #cbd5e1; font-size: 0.9rem; margin: 0.25rem 0 0 0;">{cmt}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+else:
+    st.info("No previous investigation actions recorded for this alert. Alert is currently in initial OPEN state.")
+

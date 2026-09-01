@@ -16,11 +16,20 @@ from streaming.event_schema import TransitEvent
 
 router = APIRouter(prefix="/live", tags=["Live Streaming"])
 
+_consumer_instance = None
+
+
+def get_consumer() -> StreamingConsumer:
+    global _consumer_instance
+    if _consumer_instance is None:
+        _consumer_instance = StreamingConsumer()
+    return _consumer_instance
+
 
 @router.get("/status")
 def get_live_stream_status():
     """Returns streaming broker engine status, consumer health, and DLQ metrics."""
-    consumer = StreamingConsumer()
+    consumer = get_consumer()
     return {
         "status": "active",
         "broker_mode": "in_memory_resilient_queue" if not consumer.stream_manager.is_redis_connected else "redis_stream",
@@ -50,7 +59,7 @@ def ingest_live_event(
     Ingests a live ticket event, executes full ML-graph intelligence chain (P6->P10),
     and persists results to database.
     """
-    consumer = StreamingConsumer()
+    consumer = get_consumer()
     from_stop = event_payload.stop_id or "STOP_START"
     to_stop = "STOP_END"
     te = TransitEvent(

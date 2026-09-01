@@ -29,6 +29,11 @@ from streaming.stream_manager import StreamManager
 logger = logging.getLogger(__name__)
 
 
+_CACHED_DEMAND_MODEL = None
+_CACHED_ANOMALY_DETECTOR = None
+_CACHED_GRAPH = None
+
+
 class StreamConsumer:
     """
     Stateful real-time consumer that executes the full FareGuard intelligence stack on incoming events.
@@ -48,7 +53,7 @@ class StreamConsumer:
         self.stream_manager = stream_manager or StreamManager()
         self.consumer_name = consumer_name
 
-        # Load models or initialize defaults
+        # Load models or initialize defaults with singleton caching
         self.demand_model = demand_model or self._load_default_demand_model()
         self.anomaly_detector = anomaly_detector or self._load_default_anomaly_detector()
         self.graph = graph or self._load_default_graph()
@@ -66,22 +71,28 @@ class StreamConsumer:
         self.latencies_ms: List[float] = []
 
     def _load_default_demand_model(self) -> Optional[MLPassengerDemandModel]:
-        path = settings.MODEL_DIR / "demand_model.pkl"
-        if path.exists():
-            return MLPassengerDemandModel.load(path)
-        return None
+        global _CACHED_DEMAND_MODEL
+        if _CACHED_DEMAND_MODEL is None:
+            path = settings.MODEL_DIR / "demand_model.pkl"
+            if path.exists():
+                _CACHED_DEMAND_MODEL = MLPassengerDemandModel.load(path)
+        return _CACHED_DEMAND_MODEL
 
     def _load_default_anomaly_detector(self) -> Optional[IsolationForestAnomalyDetector]:
-        path = settings.MODEL_DIR / "anomaly_detector.pkl"
-        if path.exists():
-            return IsolationForestAnomalyDetector.load(path)
-        return None
+        global _CACHED_ANOMALY_DETECTOR
+        if _CACHED_ANOMALY_DETECTOR is None:
+            path = settings.MODEL_DIR / "anomaly_detector.pkl"
+            if path.exists():
+                _CACHED_ANOMALY_DETECTOR = IsolationForestAnomalyDetector.load(path)
+        return _CACHED_ANOMALY_DETECTOR
 
     def _load_default_graph(self) -> Optional[TransitNetworkGraph]:
-        path = settings.MODEL_DIR / "transit_graph.pkl"
-        if path.exists():
-            return TransitNetworkGraph.load(path)
-        return None
+        global _CACHED_GRAPH
+        if _CACHED_GRAPH is None:
+            path = settings.MODEL_DIR / "transit_graph.pkl"
+            if path.exists():
+                _CACHED_GRAPH = TransitNetworkGraph.load(path)
+        return _CACHED_GRAPH
 
     def process_single_event(self, msg_id: str, raw_event_dict: Dict[str, Any]) -> Optional[StreamingProcessResult]:
         """
@@ -275,7 +286,7 @@ class StreamConsumer:
                 reported_passengers=float(event.passenger_count),
                 passenger_discrepancy=0.0,
                 expected_revenue=0.0,
-                reported_revenue=float(event.fare_amount),
+                reported_revenue=float(event.revenue),
                 revenue_discrepancy=0.0,
                 anomaly_score=0.0,
                 is_anomaly=False,

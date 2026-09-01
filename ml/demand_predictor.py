@@ -77,7 +77,12 @@ def extract_trip_features(
     features = pd.DataFrame(index=df.index)
 
     # 1. Number of stops
-    num_stops = df["num_stops"].fillna(25).astype(int)
+    if "num_stops" in df.columns:
+        num_stops = df["num_stops"].fillna(25).astype(int)
+    elif "num_segments" in df.columns:
+        num_stops = (df["num_segments"] + 1).fillna(25).astype(int)
+    else:
+        num_stops = pd.Series(25, index=df.index, dtype=int)
     features["num_stops"] = num_stops
 
     # 2. Time-of-day features
@@ -132,7 +137,7 @@ def extract_trip_features(
     avg_seg_dists = []
     route_freqs = []
 
-    route_counts = df["route_id"].value_counts().to_dict()
+    route_counts = df["route_id"].value_counts().to_dict() if "route_id" in df.columns else {}
 
     for idx, row in df.iterrows():
         rid = str(row.get("route_id", ""))

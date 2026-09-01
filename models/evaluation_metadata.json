@@ -1,0 +1,66 @@
+{
+  "demand_prediction": {
+    "dataset_size": 200,
+    "train_size": 140,
+    "val_size": 30,
+    "test_size": 30,
+    "models": {
+      "HistoricalMeanBaseline": {
+        "mae": 26.06,
+        "rmse": 30.283,
+        "mape": 38.31,
+        "r2": 0.5769
+      },
+      "RandomForestRegressor": {
+        "mae": 26.475,
+        "rmse": 31.93,
+        "mape": 36.845,
+        "r2": 0.5296
+      },
+      "GradientBoostingRegressor": {
+        "mae": 31.802,
+        "rmse": 36.617,
+        "mape": 40.517,
+        "r2": 0.3814
+      }
+    },
+    "selected_primary_model": "RandomForestRegressor",
+    "primary_test_metrics": {
+      "mae": 26.475,
+      "rmse": 31.93,
+      "mape": 36.845,
+      "r2": 0.5296
+    }
+  },
+  "anomaly_detection": {
+    "evaluation_protocol": "Inductive Clean-Reference Isolation Forest (Fit on Clean Baseline, Predict on Injected Dataset)",
+    "total_evaluated_trips": 200,
+    "true_anomaly_count": 30,
+    "primary_model_results": {
+      "model_name": "Inductive Clean-Reference Isolation Forest",
+      "tp": 21,
+      "fp": 25,
+      "fn": 9,
+      "tn": 145,
+      "predicted_positives": 46,
+      "precision": 0.4565,
+      "recall": 0.7,
+      "f1_score": 0.5526,
+      "pr_auc": 0.6264,
+      "roc_auc": 0.8778,
+      "fpr": 0.1471
+    },
+    "baseline_model_results": {
+      "model_name": "Rule-Based Discrepancy Threshold",
+      "tp": 15,
+      "fp": 7,
+      "fn": 15,
+      "tn": 163,
+      "predicted_positives": 22,
+      "precision": 0.6818,
+      "recall": 0.5,
+      "f1_score": 0.5769
+    }
+  },
+  "timestamp": "2026-09-01T09:11:02.516256+00:00"
+}

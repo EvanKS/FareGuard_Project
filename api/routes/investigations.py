@@ -51,8 +51,6 @@ def create_investigation_action(
 @router.get("/investigations/{investigation_id}", response_model=InvestigationResponse)
 def get_investigation_by_id(investigation_id: str, db: Session = Depends(get_db)):
     """Retrieves an investigation record by ID."""
-    inv = db.query(repo_model:=FareGuardRepository(db).db.models if hasattr(db, "models") else None)
-    # Direct query
     from database.models import InvestigationModel
     record = db.query(InvestigationModel).filter(InvestigationModel.investigation_id == investigation_id).first()
     if not record:
@@ -72,3 +70,28 @@ def list_investigations(
     """Lists recent operational investigation actions."""
     repo = FareGuardRepository(db)
     return repo.list_investigations(alert_id=alert_id, limit=limit)
+
+
+@router.get("/investigations/alerts/{alert_id}/audit-log", response_model=List[dict])
+def get_alert_audit_log(alert_id: str, db: Session = Depends(get_db)):
+    """Retrieves the complete immutable audit trail for a specific alert."""
+    repo = FareGuardRepository(db)
+    alt = repo.get_alert(alert_id)
+    if not alt:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Alert with ID '{alert_id}' not found.",
+        )
+    audits = repo.list_audit_logs(entity_type="ALERT", entity_id=alert_id, limit=100)
+    return [
+        {
+            "audit_id": a.audit_id,
+            "entity_type": a.entity_type,
+            "entity_id": a.entity_id,
+            "action": a.action,
+            "actor": a.actor,
+            "details": a.details,
+            "timestamp": a.timestamp.isoformat() if a.timestamp else None,
+        }
+        for a in audits
+    ]

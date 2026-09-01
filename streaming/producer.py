@@ -95,3 +95,7 @@ class EventProducer:
     def stop(self):
         """Halts active streaming loop."""
         self._is_active = False
+
+
+# Backward compatibility alias
+StreamProducer = EventProducer

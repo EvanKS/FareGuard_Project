@@ -1,28 +1,24 @@
-# FareGuard
+# FareGuard System Architecture
 
-**A Cloud-Native ML-Graph Intelligence Platform for Real-Time Revenue Leakage Detection & Evasion Auditing in Public Bus Transit**
+## 1. System Overview
 
----
-
-## 1. Executive Summary
-
-**FareGuard** combines topological transit network modeling, machine learning demand prediction, inductive clean-reference anomaly detection, graph discrepancy localization, and explainable multi-factor risk scoring to discover, isolate, and audit revenue leakage across large-scale urban bus transit systems (e.g. Bangalore Metropolitan Transport Corporation — BMTC).
+**FareGuard** is an end-to-end AI-powered revenue leakage and fare evasion intelligence platform for public transit networks (e.g. Bangalore Metropolitan Transport Corporation — BMTC).
 
 ```
    ┌─────────────────────────────────────────────────────────────┐
-   │                  BMTC GTFS Transit Graph                    │
-   │           (9,887 Geocoded Stops, 1,800+ Bus Routes)         │
+   │                  Transit Network Graph (P3)                 │
+   │               (GTFS Ingestion: Routes & Stops)              │
    └──────────────────────────────┬──────────────────────────────┘
                                   │
                                   ▼
    ┌─────────────────────────────────────────────────────────────┐
-   │            Synthetic Transit & Anomaly Engine               │
+   │            Synthetic Transit & Anomaly Engine (P4-5)        │
    │               (100 Routes, 200 Trips, Ticketing)            │
    └──────────────────────────────┬──────────────────────────────┘
                                   │
                                   ▼
    ┌─────────────────────────────────────────────────────────────┐
-   │          Real-Time Streaming & Telemetry Ingestion          │
+   │          Real-Time Streaming & Telemetry Ingestion (P11)    │
    │              (Redis Streams / Resilient In-Memory)          │
    └──────────────────────────────┬──────────────────────────────┘
                                   │
@@ -31,117 +27,71 @@
 ┌───────────────┐         ┌───────────────┐         ┌───────────────┐
 │ Demand Model  │         │ Anomaly Model │         │ Discrepancy   │
 │ (RandomForest)│         │ (Iso Forest)  │         │ Localizer     │
-│    R²: 0.89   │         │   F1: 0.935   │         │ Overlap: 95%  │
+│   [Phase 6]   │         │   [Phase 7]   │         │   [Phase 8]   │
 └───────┬───────┘         └───────┬───────┘         └───────┬───────┘
         │                         │                         │
         └─────────────────────────┼─────────────────────────┘
                                   ▼
    ┌─────────────────────────────────────────────────────────────┐
-   │               Multi-Factor Risk Scoring Engine              │
+   │               Multi-Factor Risk Scoring Engine (P9)         │
    │           (Normalized Score 0.0 - 1.0, Neutral Levels)      │
    └──────────────────────────────┬──────────────────────────────┘
                                   │
                                   ▼
    ┌─────────────────────────────────────────────────────────────┐
-   │             Faithful Explainability Engine                  │
+   │             Faithful Explainability Engine (P10)            │
    │         (Automated Dossier, Zero Ground-Truth Leakage)      │
    └──────────────────────────────┬──────────────────────────────┘
                                   │
                                   ▼
    ┌─────────────────────────────────────────────────────────────┐
-   │         PostgreSQL / SQLite Persistence Tier                │
+   │         PostgreSQL / SQLite Persistence Tier (P12)          │
    │              (Relational Models, Audit Logging)             │
    └──────────────────────────────┬──────────────────────────────┘
                                   │
                                   ▼
    ┌─────────────────────────────────────────────────────────────┐
-   │             FastAPI Backend REST API Engine                 │
+   │             FastAPI Backend REST API Engine (P13)           │
    │              (CRUD, Analytics, Live Stream Ingest)          │
    └──────────────────────────────┬──────────────────────────────┘
                                   │
                                   ▼
    ┌─────────────────────────────────────────────────────────────┐
-   │          Streamlit Operational Control Center               │
+   │          Streamlit Operational Control Center (P14)         │
    │        (Executive Overview, Transit Map, Live Stream,       │
    │       Route Analytics, Human Investigation Disposition)     │
+   └──────────────────────────────┬──────────────────────────────┘
+                                  │
+                                  ▼
+   ┌─────────────────────────────────────────────────────────────┐
+   │         Human-in-the-Loop Investigation Workflow (P15)      │
+   │        (Audit History, Confirmation, Operational Review)    │
    └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Key Verified Research Results
+## 2. Core Subsystems
 
-| Subsystem | Metric | Verified Score |
-|---|---|:---:|
-| **Demand Prediction** | Random Forest Regressor $R^2$ | **0.8942** |
-| **Demand Prediction** | Test Set Mean Absolute Error (MAE) | **7.42 passengers** |
-| **Anomaly Detection** | Inductive Clean-Reference Isolation Forest F1 | **0.9355** |
-| **Anomaly Detection** | Precision / Recall | **90.62% / 96.67%** |
-| **Anomaly Detection** | PR-AUC / ROC-AUC | **0.9418 / 0.9845** |
-| **Graph Localization** | Conditional Subpath Overlap Recall | **95.00%** |
-| **Real-Time Streaming**| Throughput (Single Worker) | **> 1,500 events/sec** |
-| **Real-Time Streaming**| Average Processing Latency | **< 2.5 ms** |
-| **Safety & Integrity** | Ground-Truth Oracle Feature Leakage | **0 features leaked (100% Isolated)** |
+### 2.1 Transit Network Graph Engine (`graph/`)
+- Built from BMTC GTFS feed (stops, routes, trips, stop_times).
+- Models spatial-topological network structure, inter-stop distances, sequence order, and corridor connectivity.
 
----
+### 2.2 Machine Learning Intelligence (`ml/`)
+- **Passenger Demand Predictor**: Random Forest & Gradient Boosting regressors predicting expected boardings based on time of day, day of week, route structural properties, and historical frequency.
+- **Anomaly Detection Engine**: Clean-reference Isolation Forest detecting multi-dimensional divergence between predicted demand, ticket issuance, and collected revenue.
 
-## 3. Quick Start & Execution
+### 2.3 Graph Discrepancy Localization (`graph/localization.py`)
+- Isolates physical corridor subpaths where passenger drop or revenue deflection is most concentrated.
 
-### 3.1 Install Environment
-```bash
-python -m venv venv
-venv\Scripts\activate  # Windows: venv\Scripts\activate | Linux: source venv/bin/activate
-pip install -r requirements.txt
-```
+### 2.4 Risk Scoring & Synthesis (`risk/`, `explainability/`)
+- Normalizes signals into continuous risk score `[0.0, 1.0]` and neutral operational risk tiers (`NORMAL`, `MONITOR`, `SUSPICIOUS`, `HIGH_RISK`).
+- Generates human-readable evidence summaries, discrepancy metrics, and audit recommendations.
 
-### 3.2 Run End-to-End Pipeline Demo
-```bash
-python scripts/run_demo.py
-```
+### 2.5 Persistence & API Layers (`database/`, `api/`)
+- PostgreSQL enterprise relational store with automated SQLite development fallback.
+- FastAPI REST interface delivering alerts, operational analytics, stream metrics, and investigation action dispatch.
 
-### 3.3 Launch REST API Backend (FastAPI)
-```bash
-uvicorn api.main:app --port 8000 --reload
-```
-- Interactive Swagger Documentation: `http://localhost:8000/docs`
-- Healthcheck Endpoint: `http://localhost:8000/health`
-
-### 3.4 Launch Streamlit Operations Console
-```bash
-streamlit run dashboard/app.py
-```
-
-### 3.5 Run Full Research Evaluation Engine
-```bash
-python scripts/run_final_evaluation.py
-```
-
-### 3.6 Run Test Suite
-```bash
-pytest tests/ -v --tb=short
-```
-
----
-
-## 4. Repository Structure & Documentation
-
-- **`api/`**: FastAPI REST backend routes (`alerts.py`, `analytics.py`, `investigations.py`, `live_stream.py`, `routes_trips.py`).
-- **`dashboard/`**: Streamlit multi-page operations console (`app.py`, `api_client.py`, `pages/`).
-- **`database/`**: PostgreSQL and SQLite ORM models, repository CRUD, and analytics services.
-- **`graph/`**: GTFS transit network graph builder and discrepancy localizer.
-- **`ml/`**: Passenger demand predictor and clean-reference Isolation Forest anomaly detector.
-- **`risk/`**: Multi-factor operational risk scoring engine.
-- **`explainability/`**: Explainable AI evidence synthesis and alert dossier generation.
-- **`streaming/`**: Redis Streams broker, in-memory resilient queue fallback, and stream consumer.
-- **`scripts/`**: Demo script (`run_demo.py`), evaluation engine (`run_final_evaluation.py`), database initializer (`init_database.py`).
-- **`docs/`**: Comprehensive system documentation:
-  - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-  - [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md)
-  - [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md)
-  - [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md)
-  - [`docs/MODEL_RESULTS.md`](docs/MODEL_RESULTS.md)
-  - [`docs/final_evaluation.md`](docs/final_evaluation.md)
-  - [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md)
-  - [`docs/DEMO.md`](docs/DEMO.md)
-  - [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md)
-  - [`docs/requirements_traceability.md`](docs/requirements_traceability.md)
+### 2.6 Operations Dashboard & Human-in-the-Loop (`dashboard/`)
+- Multi-page interactive Streamlit dashboard.
+- Enables operational dispatchers and auditors to review evidence dossiers, inspect network geographic hot spots, claim alerts, submit investigation actions (`CONFIRM_FOR_AUDIT`, `DISMISS`, `OPERATIONAL_ISSUE`, `FALSE_POSITIVE`), and view immutable audit trails.

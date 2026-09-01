@@ -120,6 +120,13 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
+def get_db_session() -> Session:
+    """Returns a standalone database session."""
+    SessionFactory = get_session_factory()
+    return SessionFactory()
+
+
+
 def init_db(engine: Optional[Engine] = None) -> None:
     """Creates all database tables defined in SQLAlchemy Base."""
     eng = engine or get_engine()
