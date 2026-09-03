@@ -80,13 +80,34 @@ class FareGuardRepository:
         if existing:
             return existing
 
+        route_id_str = str(event_data["route_id"])
+        trip_id_str = str(event_data["trip_id"])
+        stop_id_val = str(event_data["stop_id"]) if event_data.get("stop_id") else None
+
+        # Auto-create parent route/trip/stop if missing to ensure FK integrity
+        parent_added = False
+        if not self.db.query(RouteModel).filter(RouteModel.route_id == route_id_str).first():
+            self.db.add(RouteModel(route_id=route_id_str, route_short_name=route_id_str, route_long_name=f"Route {route_id_str}"))
+            parent_added = True
+
+        if not self.db.query(TripModel).filter(TripModel.trip_id == trip_id_str).first():
+            self.db.add(TripModel(trip_id=trip_id_str, route_id=route_id_str, direction_id=0))
+            parent_added = True
+
+        if stop_id_val and not self.db.query(StopModel).filter(StopModel.stop_id == stop_id_val).first():
+            self.db.add(StopModel(stop_id=stop_id_val, stop_name=stop_id_val, stop_lat=12.9716, stop_lon=77.5946))
+            parent_added = True
+
+        if parent_added:
+            self.db.commit()
+
         evt = TicketEventModel(
             event_id=event_data["event_id"],
             timestamp=event_data["timestamp"] if isinstance(event_data["timestamp"], datetime) else datetime.fromisoformat(event_data["timestamp"]),
             service_date=str(event_data.get("service_date", "2026-08-31")),
-            route_id=str(event_data["route_id"]),
-            trip_id=str(event_data["trip_id"]),
-            stop_id=str(event_data.get("stop_id")) if event_data.get("stop_id") else None,
+            route_id=route_id_str,
+            trip_id=trip_id_str,
+            stop_id=stop_id_val,
             passenger_count=int(event_data.get("passenger_count", 1)),
             fare_amount=float(event_data.get("fare_amount", 0.0)),
             payment_mode=str(event_data.get("payment_mode", "CASH")),
@@ -190,11 +211,22 @@ class FareGuardRepository:
         aid = alert_data.get("alert_id", f"ALT-{uuid.uuid4().hex[:12].upper()}")
         ts = alert_data["timestamp"] if isinstance(alert_data["timestamp"], datetime) else datetime.fromisoformat(str(alert_data["timestamp"]))
         
+        route_id_str = str(alert_data["route_id"])
+        trip_id_str = str(alert_data["trip_id"])
+
+        if not self.db.query(RouteModel).filter(RouteModel.route_id == route_id_str).first():
+            self.db.add(RouteModel(route_id=route_id_str, route_short_name=route_id_str, route_long_name=f"Route {route_id_str}"))
+            self.db.flush()
+
+        if not self.db.query(TripModel).filter(TripModel.trip_id == trip_id_str).first():
+            self.db.add(TripModel(trip_id=trip_id_str, route_id=route_id_str, direction_id=0))
+            self.db.flush()
+
         alt = AlertModel(
             alert_id=aid,
             timestamp=ts,
-            route_id=str(alert_data["route_id"]),
-            trip_id=str(alert_data["trip_id"]),
+            route_id=route_id_str,
+            trip_id=trip_id_str,
             risk_level=str(alert_data["risk_level"]),
             risk_score=float(alert_data["risk_score"]),
             alert_title=str(alert_data["alert_title"]),

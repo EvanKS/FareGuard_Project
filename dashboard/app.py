@@ -1,100 +1,110 @@
 """
-FareGuard - Operational Revenue Leakage Intelligence Dashboard
+FareGuard - Operational Revenue Leakage Intelligence
+Entrypoint. Design system v2 ("Signal Ledger").
 
-Main Streamlit Application Entrypoint.
+Same platform, rebuilt surface: printed-paper canvas, ink chassis, one signal
+colour, expressive grotesque + technical mono, animated 3D route cage.
 """
+from __future__ import annotations
 
 import streamlit as st
 
-st.set_page_config(
-    page_title="FareGuard Transit Intelligence",
-    page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded",
+from dashboard.theme import inject_theme, sidebar_chrome, T
+from dashboard.components.header import page_header, ticker
+from dashboard.components.metrics_card import ledger, feature_measure, kv_block
+from dashboard.components.alert_table import alert_table
+from dashboard.ui_utils import inr, num, ms, safe
+
+inject_theme("FareGuard Transit Intelligence")
+sidebar_chrome()
+
+from dashboard.api_client import FareGuardAPIClient  # noqa: E402  (theme first, then IO)
+
+client = FareGuardAPIClient()
+ov = safe(client, "get_overview", {}) or {}
+health = safe(client, "get_health", {"status": "offline"}) or {}
+
+online = str(health.get("status", "")).lower() in ("ok", "healthy", "online", "up")
+
+page_header(
+    index="FareGuard \u00b7 Control Surface",
+    title="Revenue leakage, localised to the segment that caused it.",
+    subtitle=(
+        "An ML-graph framework that scores every BMTC trip against forecast demand, "
+        "isolates the offending subpath, and hands auditors an explanation they can act on."
+    ),
+    badges=[
+        ("Live telemetry" if online else "Fallback mode", "high" if online else "med"),
+        ("BMTC GTFS aligned", "solid"),
+        ("Audit queue open", "info"),
+    ],
 )
 
-# Custom Theme CSS
+ticker([
+    "P95 INFERENCE " + ms(ov.get("p95_processing_latency_ms")),
+    "EVENTS PROCESSED " + num(ov.get("total_events_processed")),
+    "ANOMALIES " + num(ov.get("total_anomalies_detected")),
+    "<b>HIGH RISK " + num(ov.get("total_high_risk_alerts")) + "</b>",
+    "ROUTES " + num(ov.get("total_routes_monitored")),
+    "GTFS CHECKSUM VERIFIED",
+])
+
+feature_measure(
+    eyebrow="Observable discrepancy \u00b7 rolling window",
+    figure=inr(ov.get("total_estimated_revenue_impact_inr", 0.0)),
+    caption=(
+        "Aggregate gap between forecast fare revenue and reported collection across all "
+        "monitored trips. Every rupee here traces back to a scored segment and a named explanation."
+    ),
+    signal="",
+)
+
+ledger([
+    {"label": "Routes monitored", "value": num(ov.get("total_routes_monitored")),
+     "note": "GTFS route entities under active scoring"},
+    {"label": "Trips scored", "value": num(ov.get("total_trips_monitored")),
+     "note": "Completed trips with demand forecast + isolation pass"},
+    {"label": "Anomalies detected", "value": num(ov.get("total_anomalies_detected")), "tone": "warn",
+     "note": "Isolation forest flags above operating threshold"},
+    {"label": "High-risk alerts", "value": num(ov.get("total_high_risk_alerts")), "tone": "signal",
+     "note": "Escalated to the auditor queue"},
+    {"label": "Mean inference latency", "value": ms(ov.get("average_processing_latency_ms")), "tone": "ok",
+     "delta": "P95 " + ms(ov.get("p95_processing_latency_ms"))},
+])
+
+st.markdown("## Where to start")
 st.markdown(
-    """
-    <style>
-    /* Dark Theme Styles */
-    .stApp {
-        background-color: #0f172a;
-        color: #f8fafc;
-    }
-    .stSidebar {
-        background-color: #1e293b !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    div[data-testid="stMetricValue"] {
-        color: #f8fafc;
-        font-weight: 700;
-    }
-    div[data-testid="stMetricLabel"] {
-        color: #94a3b8;
-    }
-    </style>
-    """,
+    "Seven modules, one data path. Pick the lens that matches the question you brought."
+)
+
+routes = [
+    ("01", "Overview", "Fleet health, risk mix, dominant explanations."),
+    ("02", "Live Monitor", "Stream throughput, dead letters, tail latency."),
+    ("03", "Route Map", "Anomaly subpaths drawn over the Bengaluru network."),
+    ("04", "Alerts", "Filterable audit queue with severity and dispatch."),
+    ("05", "Investigation", "Expected vs reported, graph findings, disposition."),
+    ("06", "Analytics", "Leakage corridors and long-run revenue trend."),
+    ("07", "System Status", "Services, brokers, model registry, GTFS checksum."),
+]
+rows = "".join(
+    '<tr style="--i:' + str(i) + '"><td class="id">' + n + "</td><td><b style='color:"
+    + T.INK + ";font-size:0.95rem'>" + name + "</b></td><td>" + desc + "</td></tr>"
+    for i, (n, name, desc) in enumerate(routes)
+)
+st.markdown(
+    '<table class="fg-table"><thead><tr><th>Module</th><th>Surface</th><th>What it answers</th>'
+    "</tr></thead><tbody>" + rows + "</tbody></table>",
     unsafe_allow_html=True,
 )
 
-# Sidebar Branding
-with st.sidebar:
-    st.image("https://raw.githubusercontent.com/Vonter/bmtc-gtfs/main/logo.png", width=64) if False else None
-    st.markdown(
-        """
-        <div style="padding: 1rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 1rem;">
-            <h2 style="margin:0; font-size: 1.4rem; color: #38bdf8; font-weight: 800;">🛡️ FAREGUARD</h2>
-            <p style="margin:0; font-size: 0.8rem; color: #94a3b8;">Transit Intelligence Platform</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown("### Operational Modules")
-    st.markdown(
-        """
-        - 📊 **Overview**: Executive Fleet KPIs
-        - 📡 **Live Monitor**: Real-time Stream
-        - 🗺️ **Route Map**: Geospatial Transit
-        - 🚨 **Alerts**: Audit Queue & Findings
-        - 🔍 **Investigation**: Auditor Console
-        - 📈 **Analytics**: Historical Aggregations
-        - ⚙️ **System Status**: Microservices & Models
-        """
-    )
-    st.markdown("---")
-    st.markdown("<p style='font-size:0.75rem; color:#64748b;'>FareGuard v1.0.0 • BMTC Bengaluru</p>", unsafe_allow_html=True)
-
-# Main Welcome / Redirection
-st.title("🛡️ Welcome to FareGuard Intelligence Platform")
-st.markdown(
-    """
-    **FareGuard** is a cloud-native ML-Graph framework for detecting operational revenue leakage
-    and ticketing anomalies in public bus transit systems.
-
-    👈 **Please select a dashboard module from the sidebar navigation to begin monitoring:**
-    - **Overview**: High-level discrepancy trends, risk distribution, and urgent alerts.
-    - **Live Monitor**: Ingestion throughput and streaming latency.
-    - **Route Map**: Localized graph subpaths mapped over Bengaluru transit network.
-    - **Alerts & Investigation**: Detailed evidence analysis and auditor dispositions.
-    - **Analytics**: Historical revenue protection BI aggregations.
-    - **System Status**: Telemetry across microservices, brokers, and ML models.
-    """
+st.markdown('<hr class="fg-rule">', unsafe_allow_html=True)
+kv_block(
+    "Runtime",
+    [
+        ("Service", str(health.get("service", "FareGuard API"))),
+        ("Status", str(health.get("status", "offline")).upper()),
+        ("Version", str(health.get("version", "2.0.0"))),
+        ("Design system", "Signal Ledger v2"),
+    ],
+    inverted=True,
 )
-
-# Quick Overview Snapshot
-st.markdown("---")
-st.subheader("System Snapshot")
-from dashboard.api_client import FareGuardAPIClient
-client = FareGuardAPIClient()
-ov = client.get_overview()
-
-c1, c2, c3, c4 = st.columns(4)
-with c1:
-    st.metric("Routes Monitored", f"{ov.get('total_routes_monitored', 0):,}")
-with c2:
-    st.metric("Trips Monitored", f"{ov.get('total_trips_monitored', 0):,}")
-with c3:
-    st.metric("High-Risk Alerts", f"{ov.get('total_high_risk_alerts', 0):,}")
-with c4:
-    st.metric("Observable Discrepancy", f"₹{ov.get('total_estimated_revenue_impact_inr', 0.0):,.2f}")

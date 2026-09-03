@@ -1,33 +1,47 @@
 """
-FareGuard UI Component - Glassmorphic Metric Cards
+Ledger stats. The old glassmorphic KPI card grid is gone: metrics now read as a
+hairline-ruled financial ledger with tabular mono numerals and staggered entry.
 """
+from __future__ import annotations
+
+from typing import Sequence
 
 import streamlit as st
 
+from dashboard.components.hero_3d import hero_3d_block  # re-export path convenience
 
-def render_metric_card(
-    label: str,
-    value: str,
-    sublabel: str = "",
-    delta: str = "",
-    delta_color: str = "normal",
-    border_color: str = "#3b82f6",
-):
-    """Renders a styled metric card."""
+_TONE = {"signal": "is-signal", "warn": "is-warn", "ok": "is-ok", "": ""}
+
+
+def ledger(rows: Sequence[dict]) -> None:
+    """
+    rows: [{"label": str, "value": str, "note": str?, "tone": signal|warn|ok?, "delta": str?}]
+    """
+    html = ['<div class="fg-ledger">']
+    for i, r in enumerate(rows):
+        tone = _TONE.get(r.get("tone", ""), "")
+        note = f'<div class="fg-ledger-note">{r["note"]}</div>' if r.get("note") else ""
+        delta = f'<span class="fg-delta">{r["delta"]}</span>' if r.get("delta") else ""
+        html.append(
+            f'<div class="fg-ledger-row" style="--i:{i}">'
+            f'<div><div class="fg-ledger-label">{r["label"]}</div>{note}</div>'
+            f'<div><span class="fg-ledger-value {tone}">{r["value"]}</span>{delta}</div>'
+            f"</div>"
+        )
+    html.append("</div>")
+    st.markdown("".join(html), unsafe_allow_html=True)
+
+
+def feature_measure(eyebrow: str, figure: str, caption: str, signal: str = "") -> None:
+    """Single dominant figure + 3D cage. Use once per page, at most."""
+    hero_3d_block(eyebrow, figure, caption, signal)
+
+
+def kv_block(title: str, pairs: Sequence[tuple[str, str]], inverted: bool = False) -> None:
+    shell = "fg-panel-ink" if inverted else "fg-panel"
+    body = "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in pairs)
     st.markdown(
-        f"""
-        <div style="background: rgba(30, 41, 59, 0.7); border-radius: 12px; padding: 1.25rem; border: 1px solid rgba(255, 255, 255, 0.08); border-left: 4px solid {border_color}; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); height: 100%;">
-            <div style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8;">
-                {label}
-            </div>
-            <div style="font-size: 1.75rem; font-weight: 700; color: #f8fafc; margin: 0.35rem 0;">
-                {value}
-            </div>
-            <div style="font-size: 0.8rem; color: #64748b; display: flex; justify-content: space-between; align-items: center;">
-                <span>{sublabel}</span>
-                <span style="font-weight: 600; color: {'#10b981' if delta_color == 'positive' else '#ef4444' if delta_color == 'negative' else '#38bdf8'};">{delta}</span>
-            </div>
-        </div>
-        """,
+        f'<div class="{shell}"><div class="fg-eyebrow" style="margin-bottom:14px;">{title}</div>'
+        f'<dl class="fg-kv">{body}</dl></div>',
         unsafe_allow_html=True,
     )

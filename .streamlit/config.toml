@@ -1,0 +1,17 @@
+# FareGuard UI v2 - "Signal Ledger" design system
+# Light, warm, editorial. Replaces the old dark glassmorphic slate theme.
+
+[theme]
+base = "light"
+primaryColor = "#C4441F"              # Vermilion (signal)
+backgroundColor = "#F8F4EC"           # Warm bone paper
+secondaryBackgroundColor = "#F0EADC"  # Raised paper
+textColor = "#241C15"                 # Espresso ink
+font = "sans serif"
+
+[client]
+showSidebarNavigation = true
+toolbarMode = "minimal"
+
+[server]
+runOnSave = true

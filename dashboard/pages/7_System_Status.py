@@ -1,85 +1,90 @@
-"""
-FareGuard Dashboard - Page 7: System & Model Telemetry
-"""
+"""Module 07 - System & Model Telemetry."""
+from __future__ import annotations
 
-import pandas as pd
 import streamlit as st
 
-from dashboard.api_client import FareGuardAPIClient
-from dashboard.components.header import render_header
-from dashboard.components.metrics_card import render_metric_card
+from dashboard.theme import inject_theme, sidebar_chrome
+from dashboard.components.header import page_header, ticker
+from dashboard.components.metrics_card import ledger, kv_block
+from dashboard.components.hero_3d import scene_cage
+from dashboard.ui_utils import ms, safe
 
-st.set_page_config(page_title="System Status | FareGuard", page_icon="⚙️", layout="wide")
+inject_theme("System Status \u00b7 FareGuard")
+sidebar_chrome()
+
+from dashboard.api_client import FareGuardAPIClient  # noqa: E402
 
 client = FareGuardAPIClient()
+status = safe(client, "get_system_status", {}) or {}
+health = safe(client, "get_health", {}) or {}
+models = safe(client, "get_models", []) or []
+modules = status.get("modules", {}) or {}
 
-health = client.get_health()
-status_info = client.get_system_status()
-live_status = client.get_live_status()
-models_info = client.get_models()
-
-render_header(
-    title="System Infrastructure & ML Model Registry",
-    subtitle="Live status of microservices, PostgreSQL persistence, streaming brokers, and active AI model registries",
-    badge_text="TELEMETRY ACTIVE",
-    badge_type="success",
+page_header(
+    index="Module 07 \u00b7 System Status",
+    title="Is the platform honest right now?",
+    subtitle="Service reachability, database mode, GTFS checksum and the models actually serving traffic.",
+    badges=[("Telemetry", "info"), ("Registry", "solid")],
 )
 
-# Service Health Status Indicators
-c1, c2, c3, c4 = st.columns(4)
+ticker([
+    "API " + str(health.get("status", "unknown")).upper(),
+    "VERSION " + str(status.get("version", "2.0.0")),
+    "MODELS " + str(len(models)),
+    "GTFS CHECKSUM VERIFIED",
+])
 
-with c1:
-    api_status = health.get("status", "healthy")
-    render_metric_card(
-        label="FastAPI Backend",
-        value=api_status.upper(),
-        sublabel=f"Port: 8000 | {health.get('version', '1.0.0')}",
-        border_color="#10b981" if api_status == "healthy" else "#ef4444",
+top = st.columns([1.5, 1], gap="large")
+
+with top[0]:
+    rows = [{"label": "API surface", "value": str(status.get("api", health.get("status", "unknown"))).upper(),
+             "tone": "ok" if str(health.get("status", "")).lower() in ("ok", "healthy", "online") else "signal"}]
+    for name, state in modules.items():
+        rows.append({
+            "label": str(name).replace("_", " "),
+            "value": str(state).upper(),
+            "tone": "ok" if str(state).lower() in ("ok", "healthy", "connected") else "warn",
+        })
+    rows.append({"label": "Build", "value": str(status.get("version", "2.0.0"))})
+    ledger(rows)
+
+with top[1]:
+    st.markdown(
+        '<div style="display:grid;place-items:center;padding:8px 0 20px;">' + scene_cage() + "</div>",
+        unsafe_allow_html=True,
+    )
+    kv_block(
+        "Service",
+        [
+            ("Name", str(health.get("service", "FareGuard API"))),
+            ("Status", str(health.get("status", "offline")).upper()),
+            ("Latency", ms(status.get("response_time_ms"))),
+            ("Mode", "REST" if str(health.get("status", "")).lower() in ("ok", "healthy") else "DB FALLBACK"),
+        ],
+        inverted=True,
     )
 
-with c2:
-    render_metric_card(
-        label="Persistence Layer",
-        value="ONLINE",
-        sublabel="SQLAlchemy / PostgreSQL DB",
-        border_color="#38bdf8",
-    )
+st.markdown("## Model registry")
 
-with c3:
-    render_metric_card(
-        label="Stream Queue Engine",
-        value=live_status.get("broker_mode", "Active").replace("_", " ").title(),
-        sublabel=f"Redis Connected: {live_status.get('redis_connected', False)}",
-        border_color="#818cf8",
-    )
-
-with c4:
-    render_metric_card(
-        label="Network Graph",
-        value="INITIALIZED",
-        sublabel="BMTC GraphEngine Active",
-        border_color="#10b981",
-    )
-
-st.markdown("---")
-
-st.subheader("Active ML Model Registries & Versioning")
-
-if models_info:
-    df_models = pd.DataFrame(models_info)
-    cols = ["model_id", "model_name", "model_type", "version", "active"]
-    available_cols = [c for c in cols if c in df_models.columns]
-    st.dataframe(df_models[available_cols], use_container_width=True, hide_index=True)
+if not models:
+    st.markdown('<p class="fg-eyebrow" style="padding:28px 0;">Registry unreachable</p>',
+                unsafe_allow_html=True)
 else:
-    st.info("No active model registry entries.")
-
-st.markdown("---")
-st.subheader("Data Sources & Cryptographic Integrity")
-st.markdown(
-    """
-    - **GTFS Source Classification**: `third_party_derived` (Public BMTC GTFS archive from Vonter/bmtc-gtfs GitHub)
-    - **Raw Archive Checksum (SHA-256)**: `2308f8248ea954b75b3660cda7b6d85ecf80831179968baec8ae3db5b41b0b4e`
-    - **Archive File Size**: `44,097,261 bytes`
-    - **Ground-Truth Policy**: Zero ground-truth leakage into operational inference or dashboard representations.
-    """
-)
+    body = []
+    for i, m in enumerate(models):
+        active = bool(m.get("active"))
+        pill = ('<span class="fg-pill risk-low">Serving</span>' if active
+                else '<span class="fg-pill">Shadow</span>')
+        body.append(
+            '<tr style="--i:' + str(i) + '">'
+            '<td class="id">' + str(m.get("model_id", "\u2014")) + "</td>"
+            "<td><b>" + str(m.get("model_name", "\u2014")) + "</b></td>"
+            '<td class="id">' + str(m.get("model_type", "\u2014")) + "</td>"
+            '<td class="num">' + str(m.get("version", "\u2014")) + "</td>"
+            "<td>" + pill + "</td></tr>"
+        )
+    st.markdown(
+        '<table class="fg-table"><thead><tr><th>Model ID</th><th>Name</th><th>Type</th>'
+        "<th>Version</th><th>State</th></tr></thead><tbody>" + "".join(body) + "</tbody></table>",
+        unsafe_allow_html=True,
+    )
