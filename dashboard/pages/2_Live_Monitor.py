@@ -1,7 +1,10 @@
 """Module 02 - Live Stream Monitor."""
 from __future__ import annotations
 
+import random
 import time
+from datetime import datetime, timezone
+import pandas as pd
 import streamlit as st
 
 from dashboard.theme import inject_theme, sidebar_chrome, T
@@ -36,7 +39,7 @@ page_header(
 # Live Stream Controls
 # -------------------------------------------------------------
 st.markdown("### Telemetry Stream Controller")
-ctrl_cols = st.columns([1.2, 1.2, 1.6, 1.6, 1.8], gap="small")
+ctrl_cols = st.columns([1.1, 1.1, 1.3, 1.4, 1.4, 1.7], gap="small")
 
 with ctrl_cols[0]:
     if is_sim_running:
@@ -56,15 +59,40 @@ with ctrl_cols[1]:
         st.rerun()
 
 with ctrl_cols[2]:
+    if st.button("Inject 10 live", key="btn_inject_10_live", help="Emit 10 batch live ticketing transactions"):
+        routes = ["335E", "500D", "201R", "G2", "365", "V-500D"]
+        modes = ["CASH", "UPI", "SMARTCARD"]
+        for i in range(10):
+            r_id = random.choice(routes)
+            pax = random.choices([1, 2, 3, 4, 8], weights=[0.5, 0.3, 0.1, 0.05, 0.05])[0]
+            fare = pax * random.choice([15.0, 20.0, 25.0])
+            evt = {
+                "event_id": f"STREAM-{int(time.time()*1000)}-{i}",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "service_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                "route_id": r_id,
+                "trip_id": f"TRIP-{r_id}-LIVE",
+                "passenger_count": pax,
+                "fare_amount": fare,
+                "payment_mode": random.choice(modes),
+                "device_id": f"ETM-{r_id}-01",
+                "is_synthetic": True,
+            }
+            client.post_live_event(evt)
+        st.toast("Successfully ingested 10 live events!")
+        time.sleep(0.3)
+        st.rerun()
+
+with ctrl_cols[3]:
     if st.button("Inject anomaly spike", key="btn_inject_anomaly", help="Inject acute revenue deficit into active stream"):
         client.inject_anomaly()
         st.toast("Anomaly spike queued! Next event will carry acute discrepancy.")
         st.rerun()
 
-with ctrl_cols[3]:
+with ctrl_cols[4]:
     auto_refresh = st.checkbox("Live auto-poll (3s)", value=is_sim_running, key="chk_auto_poll")
 
-with ctrl_cols[4]:
+with ctrl_cols[5]:
     st.markdown(
         f'<div style="padding-top:10px;" class="fg-eyebrow">'
         f'STATE: <b>{"RUNNING" if is_sim_running else "IDLE"}</b> · '
@@ -129,34 +157,41 @@ if not events:
         '<div class="fg-panel" style="text-align:center;padding:56px 0;">'
         '<div class="fg-eyebrow">Feed idle</div>'
         '<p style="margin:10px auto 0;max-width:46ch;">No live events in current buffer. '
-        "Click <b>'Start stream'</b> or <b>'Step ticket'</b> above to start streaming transactions through the ML pipeline.</p></div>",
+        "Click <b>'Start stream'</b>, <b>'Step ticket'</b>, or <b>'Inject 10 live'</b> above to start streaming transactions through the ML pipeline.</p></div>",
         unsafe_allow_html=True,
     )
 else:
-    rows = []
-    for i, e in enumerate(events[:40]):
-        score = e.get("risk_score") or 0
-        try:
-            pct = max(0.0, min(1.0, float(score)))
-        except (TypeError, ValueError):
-            pct = 0.0
-        hot = "hot" if pct >= 0.7 else ""
-        rows.append(
-            '<tr style="--i:' + str(i) + '">'
-            + '<td class="id">' + str(e.get("event_id", "—")) + "</td>"
-            + '<td class="id">' + str(e.get("trip_id", "—")) + "</td>"
-            + '<td class="id">' + str(e.get("route_id", "—")) + "</td>"
-            + '<td class="num">' + num(e.get("passenger_count")) + "</td>"
-            + '<td><div class="fg-bar" style="--i:' + str(i) + '"><i class="' + hot
-            + '" style="width:' + format(pct * 100, ".0f") + '%"></i></div></td>'
-            + '<td class="id">' + str(e.get("timestamp", "—"))[:19] + "</td></tr>"
+    tab1, tab2 = st.tabs(["Signal Ledger View", "Raw Data Grid"])
+    with tab1:
+        rows = []
+        for i, e in enumerate(events[:40]):
+            score = e.get("risk_score") or 0
+            try:
+                pct = max(0.0, min(1.0, float(score)))
+            except (TypeError, ValueError):
+                pct = 0.0
+            hot = "hot" if pct >= 0.7 else ""
+            rows.append(
+                '<tr style="--i:' + str(i) + '">'
+                + '<td class="id">' + str(e.get("event_id", "—")) + "</td>"
+                + '<td class="id">' + str(e.get("trip_id", "—")) + "</td>"
+                + '<td class="id">' + str(e.get("route_id", "—")) + "</td>"
+                + '<td class="num">' + num(e.get("passenger_count")) + "</td>"
+                + '<td><div class="fg-bar" style="--i:' + str(i) + '"><i class="' + hot
+                + '" style="width:' + format(pct * 100, ".0f") + '%"></i></div></td>'
+                + '<td class="id">' + str(e.get("timestamp", "—"))[:19] + "</td></tr>"
+            )
+        st.markdown(
+            '<table class="fg-table"><thead><tr><th>Event</th><th>Trip</th><th>Route</th>'
+            "<th>Boardings</th><th>Risk</th><th>Timestamp</th></tr></thead><tbody>"
+            + "".join(rows) + "</tbody></table>",
+            unsafe_allow_html=True,
         )
-    st.markdown(
-        '<table class="fg-table"><thead><tr><th>Event</th><th>Trip</th><th>Route</th>'
-        "<th>Boardings</th><th>Risk</th><th>Timestamp</th></tr></thead><tbody>"
-        + "".join(rows) + "</tbody></table>",
-        unsafe_allow_html=True,
-    )
+    with tab2:
+        df_events = pd.DataFrame(events[:50])
+        cols = ["event_id", "timestamp", "route_id", "trip_id", "passenger_count", "fare_amount", "payment_mode", "device_id", "risk_score"]
+        available_cols = [c for c in cols if c in df_events.columns]
+        st.dataframe(df_events[available_cols], use_container_width=True, hide_index=True)
 
 st.markdown('<div style="height:20px"></div>', unsafe_allow_html=True)
 feed_cols = st.columns([1.5, 4], gap="small")

@@ -28,6 +28,7 @@ from database.models import (
     RiskScoreModel,
     RouteModel,
     StopModel,
+    TicketEventModel,
     TripModel,
 )
 
@@ -173,6 +174,55 @@ def seed_database(db: Session, max_routes: int = 500, max_stops: int = 1000, max
         db.bulk_save_objects(alert_objs)
         db.commit()
         logger.info(f"Inserted {len(alert_objs)} alert records.")
+
+    # Seed ticket events (Phase 4 / Phase 11 telemetry)
+    tickets_csv = settings.SYNTHETIC_DATA_DIR / "tickets.csv"
+    if tickets_csv.exists():
+        logger.info("--- 4. Seeding Ticket Events Telemetry ---")
+        tkt_df = pd.read_csv(tickets_csv).head(2000)
+        existing_routes = set(r.route_id for r in db.query(RouteModel.route_id).all())
+        existing_trips = set(t.trip_id for t in db.query(TripModel.trip_id).all())
+        existing_stops = set(s.stop_id for s in db.query(StopModel.stop_id).all())
+
+        event_objs = []
+        for idx, row in tkt_df.iterrows():
+            r_id = str(row["route_id"])
+            t_id = str(row["trip_id"])
+            s_id = str(row.get("origin_stop_id", ""))
+
+            if r_id not in existing_routes:
+                db.add(RouteModel(route_id=r_id, route_short_name=r_id, route_long_name=f"Route {r_id}"))
+                existing_routes.add(r_id)
+            if t_id not in existing_trips:
+                db.add(TripModel(trip_id=t_id, route_id=r_id))
+                existing_trips.add(t_id)
+            if s_id and s_id not in existing_stops:
+                db.add(StopModel(stop_id=s_id, stop_name=str(row.get("origin_stop_name", s_id)), stop_lat=12.9716, stop_lon=77.5946))
+                existing_stops.add(s_id)
+
+            t_val = row.get("timestamp")
+            t_dt = pd.to_datetime(t_val).to_pydatetime() if pd.notna(t_val) else datetime.now(timezone.utc)
+
+            event_objs.append(
+                TicketEventModel(
+                    event_id=str(row.get("ticket_id", f"EVT-{idx+1:06d}")),
+                    timestamp=t_dt,
+                    service_date=str(t_val)[:10] if pd.notna(t_val) else "2026-08-31",
+                    route_id=r_id,
+                    trip_id=t_id,
+                    stop_id=s_id if s_id in existing_stops else None,
+                    passenger_count=int(row.get("passenger_count", 1)),
+                    fare_amount=float(row.get("total_amount_inr", row.get("fare_inr", 15.0))),
+                    payment_mode=str(row.get("payment_mode", "CASH")).upper(),
+                    device_id=f"ETM-{r_id}-01",
+                    is_synthetic=True,
+                )
+            )
+
+        db.commit()
+        db.bulk_save_objects(event_objs)
+        db.commit()
+        logger.info(f"Inserted {len(event_objs)} ticket events.")
 
     # Seed model metadata
     model_entries = [
