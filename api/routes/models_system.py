@@ -63,3 +63,18 @@ def get_system_metrics(db: Session = Depends(get_db)):
         "database": "connected",
         "overview": overview,
     }
+
+
+@router.get("/cloud/status", response_model=Dict[str, Any])
+def get_cloud_services_status():
+    """Returns real-time health, latency, and telemetry for AWS S3, SNS, SQS, and CloudWatch."""
+    from cloud import cloud_manager
+    return cloud_manager.get_full_cloud_status()
+
+
+@router.post("/cloud/dispatch-test", response_model=Dict[str, Any])
+def trigger_cloud_test_dispatch():
+    """Triggers an end-to-end cloud dispatch pipeline across AWS SNS, S3, and CloudWatch."""
+    from cloud import cloud_manager
+    return cloud_manager.trigger_test_dispatch()
+

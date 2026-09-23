@@ -636,3 +636,28 @@ class FareGuardAPIClient:
             ]
 
         return subpaths
+
+    def get_cloud_status(self) -> Dict[str, Any]:
+        """Fetch status and health metrics across all integrated Cloud services."""
+        res = self._get("/cloud/status")
+        if res:
+            return res
+        try:
+            from cloud import cloud_manager
+            return cloud_manager.get_full_cloud_status()
+        except Exception as e:
+            logger.error("Failed to fetch cloud status: %s", e)
+            return {"deployment_target": "AWS Cloud-Native", "overall_mode": "HYBRID_SIMULATION_READY", "services": []}
+
+    def trigger_cloud_test(self) -> Dict[str, Any]:
+        """Trigger an end-to-end cloud dispatch test."""
+        res = self._post("/cloud/dispatch-test", json={})
+        if res:
+            return res
+        try:
+            from cloud import cloud_manager
+            return cloud_manager.trigger_test_dispatch()
+        except Exception as e:
+            logger.error("Failed to trigger cloud dispatch: %s", e)
+            return {"status": "ERROR", "error": str(e)}
+

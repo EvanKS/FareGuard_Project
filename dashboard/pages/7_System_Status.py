@@ -88,3 +88,69 @@ else:
         "<th>Version</th><th>State</th></tr></thead><tbody>" + "".join(body) + "</tbody></table>",
         unsafe_allow_html=True,
     )
+
+st.markdown("## Cloud Infrastructure & Managed Services (AWS)")
+
+cloud_info = safe(client, "get_cloud_status", {}) or {}
+cloud_services = cloud_info.get("services", [])
+deploy_target = cloud_info.get("deployment_target", "AWS Cloud-Native (ap-south-1)")
+overall_mode = cloud_info.get("overall_mode", "HYBRID_SIMULATION_READY")
+
+cloud_top = st.columns([2, 1], gap="medium")
+with cloud_top[0]:
+    st.markdown(
+        f'<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px 20px;margin-bottom:18px;">'
+        f'<span style="color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Cloud Deployment Target</span>'
+        f'<h3 style="margin:4px 0 6px;color:#f8fafc;font-size:20px;">{deploy_target}</h3>'
+        f'<span class="fg-pill" style="background:rgba(56,189,248,0.15);color:#38bdf8;border:1px solid rgba(56,189,248,0.3);font-size:11px;">{overall_mode}</span>'
+        f' &nbsp; <span style="color:#64748b;font-size:12px;">AWS Region: <b>{cloud_info.get("region", "ap-south-1")}</b></span>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+with cloud_top[1]:
+    st.markdown('<div style="padding-top:6px; display:flex; flex-direction:column; gap:8px;">', unsafe_allow_html=True)
+    if st.button("Open Dedicated AWS Cloud Console ➔", key="btn_goto_aws_console", type="primary", use_container_width=True):
+        st.switch_page("pages/8_AWS_Cloud_Console.py")
+    if st.button("Trigger Cloud Dispatch Test", key="btn_cloud_test", help="Test AWS SNS notification, S3 artifact snapshot, and CloudWatch metrics", use_container_width=True):
+        res = safe(client, "trigger_cloud_test", {}) or {}
+        if res.get("status") == "SUCCESS":
+            st.success("Cloud Test Dispatch completed: SNS alert published, S3 snapshot archived, CloudWatch metric recorded.")
+        else:
+            st.info(f"Cloud Test result: {res.get('status', 'OK')}")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+if cloud_services:
+    c_rows = []
+    for i, cs in enumerate(cloud_services):
+        s_name = cs.get("service", "Service")
+        s_status = cs.get("status", "ONLINE")
+        s_mode = cs.get("mode", "AWS_LIVE")
+        latency = cs.get("ping_latency_ms", 10)
+        
+        status_pill = (
+            f'<span class="fg-pill" style="background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3);">{s_status}</span>'
+            if s_status.upper() in ("ONLINE", "HEALTHY", "CONNECTED")
+            else f'<span class="fg-pill" style="background:rgba(234,179,8,0.15);color:#eab308;border:1px solid rgba(234,179,8,0.3);">{s_status}</span>'
+        )
+        
+        mode_pill = (
+            f'<span style="font-family:monospace;font-size:11px;color:#38bdf8;">{s_mode}</span>'
+        )
+
+        c_rows.append(
+            f'<tr style="--i:{i}">'
+            f'<td><b>{s_name}</b></td>'
+            f'<td>{status_pill}</td>'
+            f'<td>{mode_pill}</td>'
+            f'<td class="num">{latency} ms</td>'
+            f'</tr>'
+        )
+
+    st.markdown(
+        '<table class="fg-table"><thead><tr>'
+        '<th>Cloud Component</th><th>Operational State</th><th>Runtime Architecture</th><th>Latency</th>'
+        '</tr></thead><tbody>' + "".join(c_rows) + '</tbody></table>',
+        unsafe_allow_html=True,
+    )
+

@@ -19,7 +19,7 @@ page_header(
     index="Module 04 \u00b7 Alerts",
     title="The audit queue",
     subtitle="Every flagged trip with its severity, risk score and rupee exposure. Filter, then dispatch.",
-    badges=[("Human in the loop", "solid"), ("Immutable trail", "info")],
+    badges=[("Human in the loop", "solid"), ("Immutable trail", "info"), ("AWS SNS Dispatched", "alert")],
 )
 
 f = st.columns([1, 1, 1, 1, 1.2], gap="medium")
