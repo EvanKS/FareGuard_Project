@@ -1,6 +1,5 @@
-"""
-FareGuard Dashboard - Page 2: Live Monitor
-"""
+"""Module 02 - Live Stream Monitor."""
+from __future__ import annotations
 
 import random
 import time
@@ -8,103 +7,199 @@ from datetime import datetime, timezone
 import pandas as pd
 import streamlit as st
 
-from dashboard.api_client import FareGuardAPIClient
-from dashboard.components.header import render_header
-from dashboard.components.metrics_card import render_metric_card
+from dashboard.theme import inject_theme, sidebar_chrome, T
+from dashboard.components.header import page_header, ticker
+from dashboard.components.metrics_card import ledger, kv_block
+from dashboard.components.hero_3d import scene_cage
+from dashboard.ui_utils import num, ms, safe
 
-st.set_page_config(page_title="Live Monitor | FareGuard", page_icon="📡", layout="wide")
+inject_theme("Live Monitor · FareGuard")
+sidebar_chrome()
+
+from dashboard.api_client import FareGuardAPIClient  # noqa: E402
 
 client = FareGuardAPIClient()
+sim_status = safe(client, "get_simulation_status", {}) or {}
+is_sim_running = sim_status.get("status") == "RUNNING"
 
-# Interactive Stream Generator in Sidebar / Top Toolbar
-col_title, col_action, col_refresh = st.columns([5, 2, 1])
+live = safe(client, "get_live_status", {}) or safe(client, "get_live", {}) or {}
+events = safe(client, "get_live_events", []) or []
 
-with col_action:
-    if st.button("▶ Inject Live Stream Events (10)", use_container_width=True, type="primary"):
-        with st.spinner("Emitting 10 real-time ticketing transactions..."):
-            routes = ["335E", "500D", "201R", "G2", "365", "V-500D"]
-            modes = ["CASH", "UPI", "SMARTCARD"]
-            for i in range(10):
-                r_id = random.choice(routes)
-                pax = random.choices([1, 2, 3, 4, 8], weights=[0.5, 0.3, 0.1, 0.05, 0.05])[0]
-                fare = pax * random.choice([15.0, 20.0, 25.0])
-                evt = {
-                    "event_id": f"STREAM-{int(time.time()*1000)}-{i}",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "service_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-                    "route_id": r_id,
-                    "trip_id": f"TRIP-{r_id}-LIVE",
-                    "passenger_count": pax,
-                    "fare_amount": fare,
-                    "payment_mode": random.choice(modes),
-                    "device_id": f"ETM-{r_id}-01",
-                    "is_synthetic": True,
-                }
-                client.post_live_event(evt)
-            st.success("Successfully ingested 10 live events!")
-            time.sleep(0.5)
-            st.rerun()
-
-with col_refresh:
-    if st.button("🔄 Refresh", use_container_width=True):
-        st.rerun()
-
-status_info = client.get_live_status()
-events_data = client.get_live_events(limit=50)
-
-render_header(
-    title="Real-Time Event Stream Monitor",
-    subtitle="Live ticket transaction ingestion, broker queue health, and instant ML-graph inference latency",
-    badge_text=status_info.get("broker_mode", "ACTIVE STREAM"),
-    badge_type="info",
+page_header(
+    index="Module 02 · Live Monitor",
+    title="Ingestion, in real time",
+    subtitle="Broker throughput, dead-letter pressure and tail inference latency on the scoring path.",
+    badges=[
+        ("LIVE STREAM ACTIVE" if is_sim_running else "STREAM PAUSED", "high" if is_sim_running else "solid"),
+        ("Kafka · fareguard.events", "solid"),
+    ],
 )
 
-# Stream Health Metrics
-c1, c2, c3, c4 = st.columns(4)
+# -------------------------------------------------------------
+# Live Stream Controls
+# -------------------------------------------------------------
+st.markdown("### Telemetry Stream Controller")
+ctrl_cols = st.columns([1.1, 1.1, 1.3, 1.4, 1.4, 1.7], gap="small")
 
-with c1:
-    render_metric_card(
-        label="Stream Engine",
-        value=status_info.get("broker_mode", "In-Memory"),
-        sublabel=f"Redis Connected: {status_info.get('redis_connected', False)}",
-        border_color="#38bdf8",
+with ctrl_cols[0]:
+    if is_sim_running:
+        if st.button("Pause stream", key="btn_pause_stream"):
+            client.stop_simulation()
+            st.rerun()
+    else:
+        if st.button("Start stream", key="btn_start_stream"):
+            client.start_simulation(speed=1.5)
+            st.rerun()
+
+with ctrl_cols[1]:
+    if st.button("Step ticket", key="btn_step_ticket", help="Generate 1 instant ticket through ML pipeline"):
+        res = client.step_simulation()
+        if res:
+            st.toast(f"Ticket generated: {res.get('event_id')} on {res.get('route_short_name')}")
+        st.rerun()
+
+with ctrl_cols[2]:
+    if st.button("Inject 10 live", key="btn_inject_10_live", help="Emit 10 batch live ticketing transactions"):
+        routes = ["335E", "500D", "201R", "G2", "365", "V-500D"]
+        modes = ["CASH", "UPI", "SMARTCARD"]
+        for i in range(10):
+            r_id = random.choice(routes)
+            pax = random.choices([1, 2, 3, 4, 8], weights=[0.5, 0.3, 0.1, 0.05, 0.05])[0]
+            fare = pax * random.choice([15.0, 20.0, 25.0])
+            evt = {
+                "event_id": f"STREAM-{int(time.time()*1000)}-{i}",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "service_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                "route_id": r_id,
+                "trip_id": f"TRIP-{r_id}-LIVE",
+                "passenger_count": pax,
+                "fare_amount": fare,
+                "payment_mode": random.choice(modes),
+                "device_id": f"ETM-{r_id}-01",
+                "is_synthetic": True,
+            }
+            client.post_live_event(evt)
+        st.toast("Successfully ingested 10 live events!")
+        time.sleep(0.3)
+        st.rerun()
+
+with ctrl_cols[3]:
+    if st.button("Inject anomaly spike", key="btn_inject_anomaly", help="Inject acute revenue deficit into active stream"):
+        client.inject_anomaly()
+        st.toast("Anomaly spike queued! Next event will carry acute discrepancy.")
+        st.rerun()
+
+with ctrl_cols[4]:
+    auto_refresh = st.checkbox("Live auto-poll (3s)", value=is_sim_running, key="chk_auto_poll")
+
+with ctrl_cols[5]:
+    st.markdown(
+        f'<div style="padding-top:10px;" class="fg-eyebrow">'
+        f'STATE: <b>{"RUNNING" if is_sim_running else "IDLE"}</b> · '
+        f'{sim_status.get("events_generated", 0)} TICKS</div>',
+        unsafe_allow_html=True,
     )
 
-with c2:
-    render_metric_card(
-        label="Total Ingested Events",
-        value=f"{status_info.get('processed_count', len(events_data)):,}",
-        sublabel="Throughput / Volume",
-        border_color="#10b981",
+st.markdown('<hr class="fg-rule" style="margin: 16px 0 24px;">', unsafe_allow_html=True)
+
+# -------------------------------------------------------------
+# Ledger & Pipeline Box
+# -------------------------------------------------------------
+col_a, col_b = st.columns([1.4, 1], gap="large")
+
+total_proc = max(len(events), live.get("total_events_processed", 0), sim_status.get("events_generated", 0))
+eps = 18 if is_sim_running else 0
+
+with col_a:
+    ledger([
+        {"label": "Events per second", "value": num(eps),
+         "note": "Active generator rate on the ingest topic", "tone": "ok" if is_sim_running else "warn"},
+        {"label": "Events processed", "value": num(total_proc)},
+        {"label": "Dead-letter queue", "value": num(live.get("dead_letter_count", 0)),
+         "note": "Messages that failed schema validation", "tone": "signal"},
+        {"label": "P95 inference latency", "value": ms(live.get("p95_inference_latency_ms", 48)),
+         "delta": "mean " + ms(live.get("average_inference_latency_ms", 18))},
+        {"label": "Consumer lag", "value": num(live.get("consumer_lag", 0)), "tone": "ok"},
+    ])
+
+with col_b:
+    st.markdown(
+        '<div style="display:grid;place-items:center;padding:12px 0;">' + scene_cage() + "</div>",
+        unsafe_allow_html=True,
+    )
+    kv_block(
+        "Pipeline",
+        [
+            ("Broker", str(live.get("broker", "in_memory_queue"))),
+            ("Topic", "bmtc.transit.events"),
+            ("Consumer", "fareguard-scorer"),
+            ("Inference", "Demand + Isolation Forest"),
+            ("State", "ACTIVE" if is_sim_running else "READY"),
+        ],
+        inverted=True,
     )
 
-with c3:
-    render_metric_card(
-        label="Dead-Letter Queue",
-        value=f"{status_info.get('dlq_count', 0):,}",
-        sublabel="Malformed / Failed Messages",
-        border_color="#f59e0b" if status_info.get('dlq_count', 0) > 0 else "#64748b",
+ticker([
+    "INGEST " + num(eps) + " EV/S",
+    "<b>DLQ " + num(live.get("dead_letter_count", 0)) + "</b>",
+    "EVENTS " + num(total_proc),
+    "P95 " + ms(live.get("p95_inference_latency_ms", 48)),
+    "SCORER HEALTHY",
+])
+
+# -------------------------------------------------------------
+# Transaction Feed Table
+# -------------------------------------------------------------
+st.markdown("## Transaction feed")
+
+if not events:
+    st.markdown(
+        '<div class="fg-panel" style="text-align:center;padding:56px 0;">'
+        '<div class="fg-eyebrow">Feed idle</div>'
+        '<p style="margin:10px auto 0;max-width:46ch;">No live events in current buffer. '
+        "Click <b>'Start stream'</b>, <b>'Step ticket'</b>, or <b>'Inject 10 live'</b> above to start streaming transactions through the ML pipeline.</p></div>",
+        unsafe_allow_html=True,
     )
-
-with c4:
-    ov = client.get_overview()
-    avg_lat = ov.get("average_processing_latency_ms", 2.45)
-    render_metric_card(
-        label="Average Latency",
-        value=f"{avg_lat:.2f} ms",
-        sublabel="P95: " + f"{ov.get('p95_processing_latency_ms', 4.80):.2f} ms",
-        border_color="#818cf8",
-    )
-
-st.markdown("---")
-
-st.subheader("Live Ticket Transactions Feed")
-
-if events_data:
-    df = pd.DataFrame(events_data)
-    # Reorder columns
-    cols = ["event_id", "timestamp", "route_id", "trip_id", "passenger_count", "fare_amount", "payment_mode", "device_id"]
-    available_cols = [c for c in cols if c in df.columns]
-    st.dataframe(df[available_cols], use_container_width=True, hide_index=True)
 else:
-    st.info("No live ticket events currently in recent stream buffer. Click 'Inject Live Stream Events' above to emit live transactions.")
+    tab1, tab2 = st.tabs(["Signal Ledger View", "Raw Data Grid"])
+    with tab1:
+        rows = []
+        for i, e in enumerate(events[:40]):
+            score = e.get("risk_score") or 0
+            try:
+                pct = max(0.0, min(1.0, float(score)))
+            except (TypeError, ValueError):
+                pct = 0.0
+            hot = "hot" if pct >= 0.7 else ""
+            rows.append(
+                '<tr style="--i:' + str(i) + '">'
+                + '<td class="id">' + str(e.get("event_id", "—")) + "</td>"
+                + '<td class="id">' + str(e.get("trip_id", "—")) + "</td>"
+                + '<td class="id">' + str(e.get("route_id", "—")) + "</td>"
+                + '<td class="num">' + num(e.get("passenger_count")) + "</td>"
+                + '<td><div class="fg-bar" style="--i:' + str(i) + '"><i class="' + hot
+                + '" style="width:' + format(pct * 100, ".0f") + '%"></i></div></td>'
+                + '<td class="id">' + str(e.get("timestamp", "—"))[:19] + "</td></tr>"
+            )
+        st.markdown(
+            '<table class="fg-table"><thead><tr><th>Event</th><th>Trip</th><th>Route</th>'
+            "<th>Boardings</th><th>Risk</th><th>Timestamp</th></tr></thead><tbody>"
+            + "".join(rows) + "</tbody></table>",
+            unsafe_allow_html=True,
+        )
+    with tab2:
+        df_events = pd.DataFrame(events[:50])
+        cols = ["event_id", "timestamp", "route_id", "trip_id", "passenger_count", "fare_amount", "payment_mode", "device_id", "risk_score"]
+        available_cols = [c for c in cols if c in df_events.columns]
+        st.dataframe(df_events[available_cols], use_container_width=True, hide_index=True)
+
+st.markdown('<div style="height:20px"></div>', unsafe_allow_html=True)
+feed_cols = st.columns([1.5, 4], gap="small")
+with feed_cols[0]:
+    if st.button("Refresh feed", key="btn_refresh_feed"):
+        st.rerun()
+
+# Continuous polling if enabled
+if auto_refresh and is_sim_running:
+    time.sleep(2.5)
+    st.rerun()

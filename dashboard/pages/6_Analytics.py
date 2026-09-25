@@ -1,94 +1,78 @@
-"""
-FareGuard Dashboard - Page 6: Historical Analytics & BI
-"""
+"""Module 06 - Historical Analytics & BI."""
+from __future__ import annotations
 
-import pandas as pd
-import plotly.express as px
 import streamlit as st
 
-from dashboard.api_client import FareGuardAPIClient
-from dashboard.components.header import render_header
+from dashboard.theme import inject_theme, sidebar_chrome
+from dashboard.components.header import page_header
+from dashboard.components.charts import ranked_bars, timeseries
+from dashboard.components.alert_table import alert_table
+from dashboard.components.metrics_card import ledger
+from dashboard.ui_utils import inr, num, safe
 
-st.set_page_config(page_title="Analytics | FareGuard", page_icon="📈", layout="wide")
+inject_theme("Analytics \u00b7 FareGuard")
+sidebar_chrome()
+
+from dashboard.api_client import FareGuardAPIClient  # noqa: E402
 
 client = FareGuardAPIClient()
+routes = safe(client, "get_route_analytics", []) or []
+segments = safe(client, "get_segment_analytics", []) or []
+series = safe(client, "get_timeseries_analytics", []) or []
 
-render_header(
-    title="Historical Intelligence & Revenue Analytics",
-    subtitle="Network-wide revenue discrepancy trends, recurring suspicious corridor aggregations, and ML model performance",
-    badge_text="HISTORICAL AGGREGATIONS",
-    badge_type="info",
+page_header(
+    index="Module 06 \u00b7 Analytics",
+    title="Leakage has a shape",
+    subtitle="Which corridors bleed, which segments repeat, and whether the trend is bending.",
+    badges=[("Historical", "solid"), ("Corridor ranking", "info")],
 )
 
-# Fetch Analytics
-route_data = client.get_route_analytics()
-segment_data = client.get_segment_analytics()
-timeseries_data = client.get_timeseries_analytics()
-overview = client.get_overview()
+tab_trend, tab_routes, tab_segments = st.tabs(["Trend", "Corridors", "Repeat segments"])
 
-tab1, tab2, tab3 = st.tabs(["Corridor & Route Risk", "Suspicious Segments", "Discrepancy Timeseries"])
-
-with tab1:
-    st.subheader("Top Monitored Routes by Cumulative Revenue Discrepancy")
-    if route_data:
-        df_routes = pd.DataFrame(route_data)
-        fig_routes = px.bar(
-            df_routes.head(15),
-            x="route_id",
-            y="total_discrepancy_inr",
-            color="average_risk_score",
-            color_continuous_scale="Reds",
-            labels={"route_id": "Transit Route", "total_discrepancy_inr": "Total Discrepancy (₹)", "average_risk_score": "Avg Risk"},
-        )
-        fig_routes.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#f8fafc"),
-        )
-        st.plotly_chart(fig_routes, use_container_width=True)
-        st.dataframe(df_routes, use_container_width=True, hide_index=True)
+with tab_trend:
+    if series:
+        x = [str(p.get("date") or p.get("bucket") or i)[:10] for i, p in enumerate(series)]
+        y = [float(p.get("total_discrepancy_inr") or p.get("discrepancy_inr") or 0) for p in series]
+        st.plotly_chart(timeseries(x, y), use_container_width=True, config={"displayModeBar": False})
+        total = sum(y)
+        peak = max(y) if y else 0
+        ledger([
+            {"label": "Window total", "value": inr(total), "tone": "signal"},
+            {"label": "Peak day", "value": inr(peak), "tone": "warn"},
+            {"label": "Buckets", "value": num(len(y))},
+        ])
     else:
-        st.info("No route analytics records available.")
+        st.markdown(
+            '<div class="fg-panel" style="text-align:center;padding:56px 0;">'
+            '<div class="fg-eyebrow">No timeseries yet</div>'
+            '<p style="margin:10px auto 0;max-width:44ch;">Aggregation runs nightly. '
+            "Once two buckets exist, the trend renders here.</p></div>",
+            unsafe_allow_html=True,
+        )
 
-with tab2:
-    st.subheader("Top Recurring Suspicious Network Segments")
-    if segment_data:
-        df_seg = pd.DataFrame(segment_data)
-        fig_seg = px.bar(
-            df_seg.head(12),
-            x="total_estimated_impact_inr",
-            y="segment_subpath",
-            orientation="h",
-            color="frequency_flagged",
-            color_continuous_scale="Plasma",
-            labels={"total_estimated_impact_inr": "Estimated Discrepancy Impact (₹)", "segment_subpath": "Graph Subpath Segment"},
-        )
-        fig_seg.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#f8fafc"),
-        )
-        st.plotly_chart(fig_seg, use_container_width=True)
-        st.dataframe(df_seg, use_container_width=True, hide_index=True)
+with tab_routes:
+    if routes:
+        top = sorted(routes, key=lambda r: float(r.get("total_discrepancy_inr") or 0), reverse=True)[:12]
+        labels = [str(r.get("route_short_name") or r.get("route_id")) for r in top]
+        values = [float(r.get("total_discrepancy_inr") or 0) for r in top]
+        st.plotly_chart(ranked_bars(labels, values, hot_above=(max(values) * 0.6 if values else 0)),
+                        use_container_width=True, config={"displayModeBar": False})
+        alert_table(top, columns=("route", "score", "impact"))
     else:
-        st.info("No suspicious segment records available.")
+        st.markdown('<p class="fg-eyebrow" style="padding:32px 0;">Route aggregation empty</p>',
+                    unsafe_allow_html=True)
 
-with tab3:
-    st.subheader("Operational Revenue & Event Volume Over Time")
-    if timeseries_data:
-        df_ts = pd.DataFrame(timeseries_data)
-        fig_ts = px.line(
-            df_ts,
-            x="service_date",
-            y="total_revenue_inr",
-            markers=True,
-            labels={"service_date": "Service Date", "total_revenue_inr": "Reported Revenue (₹)"},
-        )
-        fig_ts.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#f8fafc"),
-        )
-        st.plotly_chart(fig_ts, use_container_width=True)
+with tab_segments:
+    if segments:
+        ledger([
+            {
+                "label": str(s.get("segment_id") or s.get("from_stop_name", "segment")),
+                "value": inr(s.get("total_discrepancy_inr")),
+                "note": str(s.get("occurrence_count") or s.get("total_alerts") or 0) + " recurrences",
+                "tone": "signal" if i < 3 else "warn",
+            }
+            for i, s in enumerate(segments[:12])
+        ])
     else:
-        st.info("No timeseries event aggregates available yet. Stream new events to populate.")
+        st.markdown('<p class="fg-eyebrow" style="padding:32px 0;">Segment aggregation empty</p>',
+                    unsafe_allow_html=True)

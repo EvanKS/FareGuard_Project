@@ -63,3 +63,8 @@ data/fareguard.db
 !notebooks/.gitkeep
 !dashboard/pages/.gitkeep
 !dashboard/components/.gitkeep
+
+# Temporary UI Design Staging
+New UI/
+FAREGUARD_UI_FRONTEND_SPECIFICATION.txt
+

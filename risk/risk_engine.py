@@ -249,6 +249,23 @@ class RiskScoringEngine:
             "pattern_impact_factor": pattern_score,
         }
 
+        # Automatic Cloud Dispatch Hook (AWS SNS & CloudWatch)
+        if level == RiskLevel.HIGH_RISK:
+            try:
+                from cloud import cloud_manager
+                cloud_manager.sns.publish_alert(
+                    alert_id=f"ALT-{trip_id}",
+                    route_id=str(route_id),
+                    risk_score=final_risk_score,
+                    deficit_inr=rev_gap,
+                    severity="HIGH_RISK",
+                    message="; ".join(reasons[:2]),
+                )
+                cloud_manager.cloudwatch.put_metric("HighRiskLeakageDetected", 1.0, "Count")
+                cloud_manager.cloudwatch.put_metric("LeakageDeficitINR", rev_gap, "Count")
+            except Exception as e:
+                logger.debug("Cloud notification hook non-blocking notice: %s", e)
+
         return RiskAssessment(
             trip_id=str(trip_id),
             route_id=str(route_id),

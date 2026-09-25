@@ -113,6 +113,15 @@ class StreamConsumer:
         except Exception as e:
             self.total_failed += 1
             self.stream_manager.dead_letter(msg_id, raw_event_dict, f"Deserialization error: {e}")
+            try:
+                from cloud import cloud_manager
+                cloud_manager.sqs.push_malformed_event(
+                    raw_event=raw_event_dict,
+                    reason=f"Deserialization error: {e}",
+                    source_component="StreamConsumer",
+                )
+            except Exception:
+                pass
             self.stream_manager.ack(msg_id)
             return None
 

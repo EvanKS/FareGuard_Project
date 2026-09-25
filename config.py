@@ -76,6 +76,30 @@ class Settings:
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 
+    # Cloud Infrastructure & Services (AWS / Managed Serverless)
+    AWS_REGION: str = os.getenv("AWS_REGION", "ap-south-1")
+    AWS_ACCESS_KEY_ID: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID", None)
+    AWS_SECRET_ACCESS_KEY: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY", None)
+    
+    # S3 Object Storage (Models, GTFS, Auditor Snapshots)
+    USE_S3: bool = os.getenv("USE_S3", "false").lower() in ("true", "1", "yes")
+    S3_BUCKET_NAME: str = os.getenv("S3_BUCKET_NAME", "fareguard-cloud-artifacts")
+    
+    # SNS Push Notifications (Auditor SMS/Email Dispatch)
+    USE_SNS: bool = os.getenv("USE_SNS", "false").lower() in ("true", "1", "yes")
+    SNS_TOPIC_ARN: str = os.getenv("SNS_TOPIC_ARN", "arn:aws:sns:ap-south-1:123456789012:fareguard-auditor-alerts")
+    
+    # SQS Dead Letter Queue (DLQ for Malformed Telemetry)
+    USE_SQS: bool = os.getenv("USE_SQS", "false").lower() in ("true", "1", "yes")
+    SQS_DLQ_URL: str = os.getenv("SQS_DLQ_URL", "https://sqs.ap-south-1.amazonaws.com/123456789012/fareguard-telemetry-dlq")
+    
+    # CloudWatch Metrics & Monitoring
+    USE_CLOUDWATCH: bool = os.getenv("USE_CLOUDWATCH", "false").lower() in ("true", "1", "yes")
+    CLOUDWATCH_NAMESPACE: str = os.getenv("CLOUDWATCH_NAMESPACE", "FareGuard/TransitIntelligence")
+
+    # Cloud Provider Profile
+    CLOUD_DEPLOYMENT_TARGET: str = os.getenv("CLOUD_DEPLOYMENT_TARGET", "AWS Cloud-Native (ap-south-1)")
+
     # Risk Thresholds (configurable)
     RISK_THRESHOLD_NORMAL: float = 0.30
     RISK_THRESHOLD_MONITOR: float = 0.60

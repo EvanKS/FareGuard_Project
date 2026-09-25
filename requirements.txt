@@ -51,6 +51,9 @@ structlog>=24.4.0
 # Utilities
 click>=8.1.0
 tqdm>=4.67.0
+boto3>=1.34.0
+botocore>=1.34.0
 
 # YAML parsing (for docker-compose validation in tests)
 pyyaml>=6.0
+
